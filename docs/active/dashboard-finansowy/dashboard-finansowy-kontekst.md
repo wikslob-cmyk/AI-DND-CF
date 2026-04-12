@@ -1,7 +1,7 @@
 # Dashboard finansowy — Kontekst techniczny
 
 Branch: `feature/dashboard-finansowy`
-Ostatnia aktualizacja: 2026-04-12 (Faza 4 ukończona)
+Ostatnia aktualizacja: 2026-04-12 (Faza 5 ukończona)
 
 ## Podmioty grupy
 
@@ -345,6 +345,45 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 4 ukończona)
 - Typecheck: czyste (backend + frontend)
 - Nowe testy: 13 model-router, 10 tools (w tym system-prompt), 8 cashflow-projection = 31 nowych testow
 - E2E: 0/2 (wymaga infrastruktury)
+
+## Code Review Fazy 4 (2026-04-12)
+
+**Severity gate:** KONTYNUUJ Z ZASTRZEZENIAMI (0x P1, 5x P2, 6x P3)
+**Raport:** `docs/active/dashboard-finansowy/review-faza-4.md`
+
+### Kluczowe wnioski
+- **Brak P1 blocking** — implementacja solidna, zgodna z planem
+- **Rate limiting:** Brak na /api/viktor/chat — krytyczne dla budzetu Claude API ($20/mies)
+- **Client singleton:** Anthropic client tworzony per request zamiast singleton
+- **File size:** tools.ts (398 linii) przekracza regule 300 linii — wymaga podzialu
+- **Testy:** Brak testow frontend Viktor + brak testow chat.ts (streamChat)
+- **Odchylenia od planu:** Brak — implementacja w pelni zgodna z planem technicznym
+- **Typecheck:** Czyste (backend + frontend)
+- **Testy:** 133 backend + 29 frontend, all passing
+- **E2E:** 0/2 (wymaga infrastruktury + klucza Anthropic API)
+
+## Faza 5: Deployment (2026-04-12)
+
+### Zmiany
+- Unit 15: Dockerization — multi-stage Dockerfiles dla frontend (Node build -> nginx:alpine) i backend (Node 22 alpine, 2-stage z prod-only deps)
+- nginx.conf: static file serving, SPA fallback, /api proxy do backend z SSE support (proxy_buffering off)
+- docker-compose.prod.yml: frontend + backend services, bez PostgreSQL (managed by Coolify), health check na backend
+- /api/health endpoint rozszerzony o DB connection check (zwraca 503 gdy brak polaczenia z baza)
+- .dockerignore: wyklucza node_modules, dist, .git, docs, zasoby
+- Coolify config i pg_dump backup — wymagaja konfiguracji infrastruktury (poza kodem)
+
+### Decyzje techniczne
+- Frontend Dockerfile buduje z roota repozytorium (potrzebuje pnpm-workspace.yaml + shared package)
+- Backend 2-stage build: pelen install dla kompilacji TS, prod-only install dla runtime image
+- nginx proxy_buffering off dla SSE (Viktor chat streaming)
+- Health check: wget w alpine (curl niedostepny domyslnie)
+- PostgreSQL nie w docker-compose.prod.yml — zarzadzany przez Coolify (managed DB)
+
+### Testy
+- Backend: 137 passed, 5 skipped (DB integration), 0 failed
+- Frontend: 36 passed, 0 failed
+- Typecheck: czyste (backend + frontend)
+- Nowe testy: brak (faza infrastrukturalna, checkboxy testowe sa E2E)
 
 ## Zrodla
 - Requirements doc: `docs/dev-brainstorms/2026-04-11-dashboard-finansowy-requirements.md`

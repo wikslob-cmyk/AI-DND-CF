@@ -16,6 +16,7 @@ import { registerDashboardSummaryRoutes } from "./routes/dashboard-summary.js";
 import { registerViktorRoutes } from "./routes/viktor.js";
 import { registerCashflowRoutes } from "./routes/cashflow.js";
 import { JWT_EXPIRY } from "./auth/constants.js";
+import { checkConnection } from "./db/connection.js";
 
 const PORT = Number(process.env.PORT) || 3001;
 const HOST = process.env.HOST || "0.0.0.0";
@@ -67,8 +68,18 @@ export async function buildApp() {
     sign: { expiresIn: JWT_EXPIRY },
   });
 
-  app.get("/api/health", async () => {
-    return { status: "ok", timestamp: new Date().toISOString() };
+  app.get("/api/health", async (_request, reply) => {
+    const dbConnected = await checkConnection();
+    const status = dbConnected ? "ok" : "degraded";
+    const statusCode = dbConnected ? 200 : 503;
+
+    return reply.status(statusCode).send({
+      status,
+      timestamp: new Date().toISOString(),
+      checks: {
+        database: dbConnected ? "connected" : "disconnected",
+      },
+    });
   });
 
   await registerAuthRoutes(app);

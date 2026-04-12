@@ -901,7 +901,7 @@ Viktor otrzymuje system prompt z kontekstem biznesowym (nazwy podmiotów, skrót
 
 ### Faza 5: Deployment
 
-- [ ] **Unit 15: Dockerization + deploy na Coolify**
+- [x] **Unit 15: Dockerization + deploy na Coolify**
 
   **Cel:** Dockerfiles, docker-compose produkcyjny, konfiguracja Coolify, deploy na VPS Hostinger.
 

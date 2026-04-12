@@ -1,7 +1,7 @@
 # Dashboard finansowy — Zadania
 
 Branch: `feature/dashboard-finansowy`
-Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
+Ostatnia aktualizacja: 2026-04-12 (Faza 5 ukończona)
 
 ---
 
@@ -463,17 +463,33 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 
 ---
 
+## Do poprawy po review fazy 4
+
+- [ ] 🟠 [important] **packages/backend/src/routes/viktor.ts** — Brak rate limiting na endpoint `/api/viktor/chat`. Kazdy request generuje koszty Claude API. Dodaj rate limit (np. 20 req/min per user).
+- [ ] 🟠 [important] **packages/backend/src/viktor/chat.ts:42-48** — Nowa instancja Anthropic client per request. Wyciagnij do singleton/module-level cache.
+- [ ] 🟠 [important] **packages/backend/src/viktor/tools.ts** — Plik 398 linii (regula: max 300). Wyodrebnij definicje narzedzi do `tool-definitions.ts` i executory do `tool-executors.ts`.
+- [ ] 🟠 [important] **packages/frontend/src/features/viktor/** — Brak testow dla ViktorChat i MessageBubble. Dodaj minimum smoke test + test SSE parsing.
+- [ ] 🟠 [important] **packages/backend/src/viktor/__tests__/** — Brak testow dla `chat.ts` (streamChat). Dodaj testy: cost calculation, tool error fallback, max rounds.
+- [ ] 🟡 [nit] **packages/backend/src/viktor/chat.ts:35** — Fallback pricing defaultuje do Sonnet. Dodaj explicit warning log dla nieznanego modelu.
+- [ ] 🟡 [nit] **packages/backend/src/viktor/tools.ts:195-226** — `get_overdue` robi 4 queries zamiast 2 (detail zawiera total).
+- [ ] 🟡 [nit] **packages/frontend/src/features/viktor/viktor-chat.tsx:177** — Array index jako React key. Rozważ unikalne ID.
+- [ ] 🟡 [nit] **packages/frontend/src/features/viktor/viktor-chat.tsx** — Brak AbortController na fetch SSE — ryzyko memory leak przy odmontowaniu.
+- [ ] 🟡 [nit] **packages/backend/src/services/cashflow-projection.ts:118** — Dodaj inline komentarz wyjasniajacy logike 0-indexed month dla VAT.
+- [ ] 🟡 [nit] **packages/backend/src/viktor/chat.ts:165** — Cost warning porownuje pojedynczy request z dziennym budzetem — nigdy sie nie odpali. Sledz sumaryczny koszt.
+
+---
+
 ## Faza 5: Deployment
 
 ### Unit 15: Dockerization + deploy na Coolify [M]
 
 **Implementacja:**
-- [ ] Stwórz `packages/frontend/Dockerfile` (multi-stage: Node build → nginx:alpine)
-- [ ] Stwórz `packages/frontend/nginx.conf` (serving static + proxy /api)
-- [ ] Stwórz `packages/backend/Dockerfile` (Node 22 alpine, pnpm install --frozen-lockfile)
-- [ ] Stwórz `docker-compose.prod.yml` (frontend + backend, bez PostgreSQL — managed by Coolify)
-- [ ] Dodaj health checks do `docker-compose.yml` (dev)
-- [ ] Dodaj endpoint `/api/health` w backend (DB connection check)
+- [x] Stwórz `packages/frontend/Dockerfile` (multi-stage: Node build → nginx:alpine)
+- [x] Stwórz `packages/frontend/nginx.conf` (serving static + proxy /api)
+- [x] Stwórz `packages/backend/Dockerfile` (Node 22 alpine, pnpm install --frozen-lockfile)
+- [x] Stwórz `docker-compose.prod.yml` (frontend + backend, bez PostgreSQL — managed by Coolify)
+- [x] Dodaj health checks do `docker-compose.yml` (dev)
+- [x] Dodaj endpoint `/api/health` w backend (DB connection check)
 - [ ] Skonfiguruj Coolify: 3 serwisy + env vars + SSL Let's Encrypt
 - [ ] Skonfiguruj backup PostgreSQL (pg_dump via cron)
 
@@ -498,4 +514,4 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 | 2. Ingestion | 4, 5, 6, 7 | ✅ Implementacja ukończona, awaiting review |
 | 3. Dashboard | 8, 9, 10, 11, 12 | ✅ Implementacja ukończona |
 | 4. AI | 13, 14 | ✅ Implementacja ukończona |
-| 5. Deploy | 15 | - |
+| 5. Deploy | 15 | ✅ Implementacja ukończona (Dockerfiles + compose + health) |

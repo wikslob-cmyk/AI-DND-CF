@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.github
+.claude
+docs
+zasoby
+*.md
+.env
+.env.*
+!.env.example
+image.png
