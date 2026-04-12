@@ -1,7 +1,7 @@
 # Dashboard finansowy — Kontekst techniczny
 
 Branch: `feature/dashboard-finansowy`
-Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
+Ostatnia aktualizacja: 2026-04-12 (Faza 3 ukończona)
 
 ## Podmioty grupy
 
@@ -267,6 +267,45 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 - Frontend: 2 passed, 0 failed
 - Typecheck: czyste (backend + frontend)
 - Nowe testy: 13 NIP, 8 Saldeo, 10 schedule, 5 warehouse, 7 NBP, 6 orchestrator
+
+## Code Review Fazy 2 (2026-04-12)
+
+**Severity gate:** KONTYNUUJ Z ZASTRZEZENIAMI (0x P1, 7x P2, 6x P3)
+**Raport:** `docs/active/dashboard-finansowy/review-faza-2.md`
+
+### Kluczowe wnioski
+- **Stub DB adapter aktywny:** Import routes zwracaja false-positive success (stub no-op adapter)
+- **Rozmiar plikow:** schedule-parser-excel.ts (388 linii) i orchestrator.ts (346 linii) przekraczaja regule 300 linii
+- **Millennium parser:** Uzywa `new Date()` jako paymentDate — zepsuje timeline w Fazie 3
+- **Error handling:** Rollback w orchestrator moze polknac oryginalny blad; NBP fallback catch block nie loguje
+- **Frontend:** 3 nowe komponenty importu bez testow
+- **Duplikacja:** `toNumber()` w 3 plikach, `parseDate()` w 2 plikach
+- **Testy:** 71 backend + 2 frontend, all passing, typecheck czyste
+- **E2E:** 0/5 weryfikacji (wymagaja infrastruktury)
+- **Odchylenia od planu:** Minimalne — dodano SCAN_PDF_FILES z nowym plikiem harmonogramu
+
+## Faza 3: Dashboard — widoki i formularz (2026-04-12)
+
+### Zmiany
+- Unit 8: Layout + nawigacja — React Router v7 z lazy loading, DashboardLayout (topbar + nav), LoginPage, EntityTabs (Grupa + 5 podmiotow), MonthlyInputForm (5 x 3 pola + month selector), shadcn/ui components (Button, Card, Input, Label, Select, Tabs), api-client z credentials, React Query provider
+- Unit 9: Naleznosci/zobowiazania — receivables/payables routes z GROUP BY contractor_nip, 3 sekcje (7d/30d/overdue), JOIN exchange_rate, InvoiceTable component z sumami per kontrahent i per sekcja
+- Unit 10: Zobowiazania finansowe — liabilities route z filtrami entity/type, schedule endpoint z rolling entries (ING limit/faktoring), LiabilityTimeline grid (miesiace x pozycje), sekcja informacyjna (ISAG, NCBiR, PARP)
+- Unit 11: Prognoza + magazyn — forecast route z grupowaniem per tydzien, przeterminowane w osobnej sekcji (NIE wliczane), warehouse route (zawsze dngro), ForecastPage + WarehousePage
+- Unit 12: Widok skonsolidowany — dashboard-summary route z 8 agregatami (receivables, payables, liabilities, bank balance, warehouse, overdue, last import), SummaryCards z kolorowymi akcentami i nawigacja do szczegolow
+
+### Decyzje techniczne
+- React Router v7 (nie v6) — wymagana przez react-router package, MemoryRouter do testow (jsdom AbortSignal incompatibility)
+- shadcn/ui jako recznie napisane komponenty (nie CLI) — Button, Card, Input, Label, Select, Tabs z CVA + tailwind-merge
+- sql tagged template bez fragment interpolation — oddzielne query branches per entity ("all" vs specific) zamiast sql`` fragmentow (umozliwia mockowanie w testach)
+- TailwindCSS v4 utility classes (nie OKLCH palette — deferred, standardowe kolory wystarczajace)
+- Dodano: react-router, zod, class-variance-authority, clsx, tailwind-merge, lucide-react do frontend
+
+### Testy
+- Backend: 91 passed, 5 skipped (DB integration), 0 failed
+- Frontend: 14 passed, 0 failed
+- Typecheck: czyste (backend + frontend)
+- Nowe testy: 5 monthly-input, 4 receivables, 2 payables, 3 liabilities, 2 forecast, 1 warehouse, 3 dashboard-summary = 20 nowych testow
+- E2E: 0/13 (wymaga infrastruktury)
 
 ## Zrodla
 - Requirements doc: `docs/dev-brainstorms/2026-04-11-dashboard-finansowy-requirements.md`

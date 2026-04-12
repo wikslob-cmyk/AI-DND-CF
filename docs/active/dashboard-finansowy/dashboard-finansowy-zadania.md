@@ -249,24 +249,24 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 ### Unit 8: Layout dashboardu + nawigacja + R4 formularz [L]
 
 **Implementacja:**
-- [ ] Stwórz `packages/frontend/src/lib/api-client.ts` (fetch wrapper z credentials: 'include')
-- [ ] Stwórz `packages/frontend/src/router.tsx` (React Router, lazy loading per route)
-- [ ] Stwórz `packages/frontend/src/layouts/dashboard-layout.tsx` (topbar + sidebar + entity tabs)
-- [ ] Stwórz `packages/frontend/src/features/auth/login-page.tsx` (formularz hasła)
-- [ ] Stwórz `packages/frontend/src/features/dashboard/entity-tabs.tsx` (Grupa, CGE, DND Group, DND, TDM, TDP)
-- [ ] Stwórz `packages/frontend/src/features/dashboard/dashboard-page.tsx` (wrapper per entity)
-- [ ] Stwórz `packages/frontend/src/features/monthly-input/monthly-input-form.tsx` (5 podmiotów × 3 pola + selector miesiąca)
-- [ ] Stwórz `packages/frontend/src/features/monthly-input/monthly-input-page.tsx`
-- [ ] Stwórz `packages/backend/src/routes/monthly-input.ts` (GET + PUT upsert)
-- [ ] Skonfiguruj shadcn/ui (Tabs, Card, Input, Button, Label, Select)
-- [ ] Skonfiguruj TailwindCSS v4 z custom OKLCH palette
-- [ ] Skonfiguruj React Query provider
-- [ ] Stwórz `packages/backend/src/routes/__tests__/monthly-input.test.ts`
+- [x] Stwórz `packages/frontend/src/lib/api-client.ts` (fetch wrapper z credentials: 'include')
+- [x] Stwórz `packages/frontend/src/router.tsx` (React Router, lazy loading per route)
+- [x] Stwórz `packages/frontend/src/layouts/dashboard-layout.tsx` (topbar + sidebar + entity tabs)
+- [x] Stwórz `packages/frontend/src/features/auth/login-page.tsx` (formularz hasła)
+- [x] Stwórz `packages/frontend/src/features/dashboard/entity-tabs.tsx` (Grupa, CGE, DND Group, DND, TDM, TDP)
+- [x] Stwórz `packages/frontend/src/features/dashboard/dashboard-page.tsx` (wrapper per entity)
+- [x] Stwórz `packages/frontend/src/features/monthly-input/monthly-input-form.tsx` (5 podmiotów × 3 pola + selector miesiąca)
+- [x] Stwórz `packages/frontend/src/features/monthly-input/monthly-input-page.tsx`
+- [x] Stwórz `packages/backend/src/routes/monthly-input.ts` (GET + PUT upsert)
+- [x] Skonfiguruj shadcn/ui (Tabs, Card, Input, Button, Label, Select)
+- [x] Skonfiguruj TailwindCSS v4 z custom OKLCH palette
+- [x] Skonfiguruj React Query provider
+- [x] Stwórz `packages/backend/src/routes/__tests__/monthly-input.test.ts`
 
 **Testy:**
-- [ ] Test: PUT monthly-input → upsert w DB, 200
-- [ ] Test: PUT monthly-input z duplikatem (ten sam podmiot+miesiąc) → update
-- [ ] Test: GET monthly-input → dane dla podmiotu i miesiąca
+- [x] Test: PUT monthly-input → upsert w DB, 200
+- [x] Test: PUT monthly-input z duplikatem (ten sam podmiot+miesiąc) → update
+- [x] Test: GET monthly-input → dane dla podmiotu i miesiąca
 - [ ] Test: [E2E] Login → dashboard → kliknij zakładkę "CGE" → widok CGE
 - [ ] Test: [E2E] Formularz R4 → wypełnij VAT=5000, wynagrodzenia=20000, saldo=150000 → Submit → dane zapisane
 - [ ] Test: [E2E] Zmiana miesiąca w R4 → formularz ładuje dane dla wybranego miesiąca
@@ -281,23 +281,23 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 ### Unit 9: Widoki należności i zobowiązań handlowych (R7a, R7b) [L]
 
 **Implementacja:**
-- [ ] Stwórz `packages/shared/src/types/invoice.ts` (InvoiceRow, InvoiceGroup, PeriodType)
-- [ ] Stwórz `packages/backend/src/routes/receivables.ts`:
+- [x] Stwórz `packages/shared/src/types/invoice.ts` (InvoiceRow, InvoiceGroup, PeriodType)
+- [x] Stwórz `packages/backend/src/routes/receivables.ts`:
   - GET /api/receivables?entity=&period= z GROUP BY contractor_nip
   - Filtr: 7d=[dziś,dziś+7), 30d=[dziś+7,dziś+30), overdue=<dziś
   - JOIN exchange_rate dla przeliczenia walut
-- [ ] Stwórz `packages/backend/src/routes/payables.ts` (analogiczna struktura)
-- [ ] Stwórz `packages/frontend/src/features/receivables/invoice-table.tsx` (DataTable shadcn/ui, sumy per sekcja)
-- [ ] Stwórz `packages/frontend/src/features/receivables/receivables-page.tsx` (3 karty: 7d, 30d, overdue)
-- [ ] Stwórz `packages/frontend/src/features/payables/payables-page.tsx`
-- [ ] Stwórz `packages/backend/src/routes/__tests__/receivables.test.ts`
-- [ ] Stwórz `packages/backend/src/routes/__tests__/payables.test.ts`
+- [x] Stwórz `packages/backend/src/routes/payables.ts` (analogiczna struktura)
+- [x] Stwórz `packages/frontend/src/features/receivables/invoice-table.tsx` (DataTable shadcn/ui, sumy per sekcja)
+- [x] Stwórz `packages/frontend/src/features/receivables/receivables-page.tsx` (3 karty: 7d, 30d, overdue)
+- [x] Stwórz `packages/frontend/src/features/payables/payables-page.tsx`
+- [x] Stwórz `packages/backend/src/routes/__tests__/receivables.test.ts`
+- [x] Stwórz `packages/backend/src/routes/__tests__/payables.test.ts`
 
 **Testy:**
-- [ ] Test: GET receivables?entity=all&period=7d → należności z terminem w [dziś, dziś+7)
-- [ ] Test: GET receivables?entity=cgesp&period=overdue → przeterminowane CGE
-- [ ] Test: Faktura EUR przeliczona do PLN kursem z exchange_rate
-- [ ] Test: Agregacja per NIP w widoku skonsolidowanym — ten sam NIP z 2 podmiotów = 1 wiersz
+- [x] Test: GET receivables?entity=all&period=7d → należności z terminem w [dziś, dziś+7)
+- [x] Test: GET receivables?entity=cgesp&period=overdue → przeterminowane CGE
+- [x] Test: Faktura EUR przeliczona do PLN kursem z exchange_rate
+- [x] Test: Agregacja per NIP w widoku skonsolidowanym — ten sam NIP z 2 podmiotów = 1 wiersz
 - [ ] Test: [E2E] Dashboard → Należności → 3 sekcje widoczne → kwoty per kontrahent → suma na dole sekcji
 - [ ] Test: [E2E] Przełączenie na zakładkę "CGE" → tylko należności CGE
 
@@ -311,19 +311,19 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 ### Unit 10: Widok zobowiązań finansowych (R7c, R7f) [L]
 
 **Implementacja:**
-- [ ] Stwórz `packages/shared/src/types/liability.ts` (LiabilityRow, ScheduleEntry, LiabilityType)
-- [ ] Stwórz `packages/backend/src/routes/liabilities.ts`:
+- [x] Stwórz `packages/shared/src/types/liability.ts` (LiabilityRow, ScheduleEntry, LiabilityType)
+- [x] Stwórz `packages/backend/src/routes/liabilities.ts`:
   - GET /api/liabilities?entity=&type=
   - GET /api/liabilities/schedule?entity=&months=12
-- [ ] Stwórz `packages/frontend/src/features/liabilities/liability-list.tsx` (lista per podmiot, sekcja informacyjna)
-- [ ] Stwórz `packages/frontend/src/features/liabilities/liability-timeline.tsx` (grid: miesiące × pozycje, desktop-first)
-- [ ] Stwórz `packages/frontend/src/features/liabilities/liabilities-page.tsx`
-- [ ] Stwórz `packages/backend/src/routes/__tests__/liabilities.test.ts`
+- [x] Stwórz `packages/frontend/src/features/liabilities/liability-list.tsx` (lista per podmiot, sekcja informacyjna)
+- [x] Stwórz `packages/frontend/src/features/liabilities/liability-timeline.tsx` (grid: miesiące × pozycje, desktop-first)
+- [x] Stwórz `packages/frontend/src/features/liabilities/liabilities-page.tsx`
+- [x] Stwórz `packages/backend/src/routes/__tests__/liabilities.test.ts`
 
 **Testy:**
-- [ ] Test: GET liabilities?entity=all → wszystkie 15 pozycji + rolling
-- [ ] Test: GET liabilities?type=info → tylko ISAG, NCBiR, PARP
-- [ ] Test: GET liabilities/schedule?months=12 → raty per miesiąc per pozycja
+- [x] Test: GET liabilities?entity=all → wszystkie 15 pozycji + rolling
+- [x] Test: GET liabilities?type=info → tylko ISAG, NCBiR, PARP
+- [x] Test: GET liabilities/schedule?months=12 → raty per miesiąc per pozycja
 - [ ] Test: [E2E] Dashboard → Zobowiązania finansowe → widoczny timeline 12 miesięcy → kliknij podmiot → filtr
 - [ ] Test: [E2E] Sekcja "Zobowiązania informacyjne" widoczna z ISAG, NCBiR, PARP
 
@@ -337,22 +337,22 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 ### Unit 11: Prognoza wpływów (R7d) + Stany magazynowe (R7e) [M]
 
 **Implementacja:**
-- [ ] Stwórz `packages/backend/src/routes/forecast.ts`:
+- [x] Stwórz `packages/backend/src/routes/forecast.ts`:
   - GET /api/forecast?days=30
   - Należności pogrupowane wg tygodni w przód (naive forecast)
   - Przeterminowane w osobnej sekcji, NIE wliczane do prognozy
-- [ ] Stwórz `packages/backend/src/routes/warehouse.ts`:
+- [x] Stwórz `packages/backend/src/routes/warehouse.ts`:
   - GET /api/warehouse (zawsze dngro)
   - Lista artykułów + łączna wartość
-- [ ] Stwórz `packages/frontend/src/features/forecast/forecast-page.tsx`
-- [ ] Stwórz `packages/frontend/src/features/warehouse/warehouse-page.tsx` (widoczne tylko w zakładce dngro)
-- [ ] Stwórz `packages/backend/src/routes/__tests__/forecast.test.ts`
-- [ ] Stwórz `packages/backend/src/routes/__tests__/warehouse.test.ts`
+- [x] Stwórz `packages/frontend/src/features/forecast/forecast-page.tsx`
+- [x] Stwórz `packages/frontend/src/features/warehouse/warehouse-page.tsx` (widoczne tylko w zakładce dngro)
+- [x] Stwórz `packages/backend/src/routes/__tests__/forecast.test.ts`
+- [x] Stwórz `packages/backend/src/routes/__tests__/warehouse.test.ts`
 
 **Testy:**
-- [ ] Test: GET forecast?days=30 → należności pogrupowane per tydzień
-- [ ] Test: Przeterminowane nie wliczone do sumy prognozy 30d
-- [ ] Test: GET warehouse → artykuły z ilością i wartością, łączna suma
+- [x] Test: GET forecast?days=30 → należności pogrupowane per tydzień
+- [x] Test: Przeterminowane nie wliczone do sumy prognozy 30d
+- [x] Test: GET warehouse → artykuły z ilością i wartością, łączna suma
 - [ ] Test: [E2E] Dashboard → Prognoza → sekcja "Oczekiwane wpływy" + sekcja "Przeterminowane (niepewne)"
 - [ ] Test: [E2E] Zakładka DND Group → Magazyn → tabela artykułów + łączna wartość
 - [ ] Test: [E2E] Zakładka CGE → brak widoku magazynu
@@ -367,17 +367,17 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 ### Unit 12: Widok skonsolidowany dashboardu (R5) [M]
 
 **Implementacja:**
-- [ ] Stwórz `packages/backend/src/routes/dashboard-summary.ts`:
+- [x] Stwórz `packages/backend/src/routes/dashboard-summary.ts`:
   - GET /api/dashboard/summary?entity=all|{code}
   - Agregacja: należności, zobowiązania handlowe, zobowiązania finansowe (30d), saldo bankowe, wartość magazynu, data importu
-- [ ] Stwórz `packages/frontend/src/features/dashboard/summary-cards.tsx` (karty z kwotami, kolorowe akcenty)
-- [ ] Stwórz `packages/frontend/src/features/dashboard/summary-page.tsx` (strona główna po zalogowaniu)
-- [ ] Stwórz `packages/backend/src/routes/__tests__/dashboard-summary.test.ts`
+- [x] Stwórz `packages/frontend/src/features/dashboard/summary-cards.tsx` (karty z kwotami, kolorowe akcenty)
+- [x] Stwórz `packages/frontend/src/features/dashboard/summary-page.tsx` (strona główna po zalogowaniu)
+- [x] Stwórz `packages/backend/src/routes/__tests__/dashboard-summary.test.ts`
 
 **Testy:**
-- [ ] Test: GET dashboard/summary?entity=all → sumy z 5 podmiotów
-- [ ] Test: GET dashboard/summary?entity=cgesp → sumy tylko CGE
-- [ ] Test: Kwoty walutowe przeliczone do PLN
+- [x] Test: GET dashboard/summary?entity=all → sumy z 5 podmiotów
+- [x] Test: GET dashboard/summary?entity=cgesp → sumy tylko CGE
+- [x] Test: Kwoty walutowe przeliczone do PLN
 - [ ] Test: [E2E] Dashboard → Grupa → 5+ kart z kwotami → data importu widoczna
 - [ ] Test: [E2E] Kliknij kartę "Należności" → redirect do widoku należności
 
@@ -480,6 +480,6 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 |---|---|---|
 | 1. Fundament | 1, 2, 3 | ✅ Implementacja ukończona |
 | 2. Ingestion | 4, 5, 6, 7 | ✅ Implementacja ukończona, awaiting review |
-| 3. Dashboard | 8, 9, 10, 11, 12 | - |
+| 3. Dashboard | 8, 9, 10, 11, 12 | ✅ Implementacja ukończona |
 | 4. AI | 13, 14 | - |
 | 5. Deploy | 15 | - |
