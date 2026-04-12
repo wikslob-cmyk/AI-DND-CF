@@ -49,6 +49,7 @@ function extractCookie(
 describe("Auth", () => {
   beforeAll(() => {
     process.env.DASHBOARD_PASSWORD = TEST_PASSWORD;
+    process.env.JWT_SECRET = JWT_SECRET;
   });
 
   beforeEach(async () => {

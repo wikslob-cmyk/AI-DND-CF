@@ -16,9 +16,27 @@ function safeCompare(a: string, b: string): boolean {
   return timingSafeEqual(aBuf, bBuf);
 }
 
+const LOGIN_BODY_SCHEMA = {
+  type: "object",
+  required: ["password"],
+  properties: {
+    password: { type: "string", minLength: 1 },
+  },
+  additionalProperties: false,
+} as const;
+
 export async function registerAuthRoutes(app: FastifyInstance): Promise<void> {
   app.post(
     "/api/auth/login",
+    {
+      schema: { body: LOGIN_BODY_SCHEMA },
+      config: {
+        rateLimit: {
+          max: 5,
+          timeWindow: "1 minute",
+        },
+      },
+    },
     async (
       request: FastifyRequest<{ Body: { password: string } }>,
       reply: FastifyReply,

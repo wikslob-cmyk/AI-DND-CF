@@ -88,6 +88,23 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
 
 ---
 
+## Do poprawy po review fazy 1
+
+- [x] 🔴 [blocking] **packages/backend/src/server.ts:10** — JWT_SECRET ma hardcoded fallback "dev-secret-change-in-production". Usun fallback, rzuc blad gdy brak env var.
+- [x] 🟠 [important] **packages/backend/src/server.ts:23** — CORS `origin: true` akceptuje kazdy origin. Ogranicz do `process.env.CORS_ORIGIN || "http://localhost:5173"`.
+- [x] 🟠 [important] **packages/backend/src/auth/login.ts:21-25** — Brak walidacji body na endpoint login. Dodaj JSON Schema lub Zod validation.
+- [x] 🟠 [important] **packages/backend/src/auth/login.ts** — Brak rate limiting na endpoint login. Dodaj `@fastify/rate-limit`.
+- [x] 🟠 [important] **packages/backend/src/server.ts:14-18** — pino-pretty zawsze wlaczone (tez w produkcji). Wlacz tylko dla `NODE_ENV !== 'production'`.
+- [x] 🟠 [important] **packages/backend/package.json** — pino-pretty nie jest w dependencies. Dodaj do devDependencies.
+- [x] 🟠 [important] **packages/frontend/** — Brak jakichkolwiek testow frontend. Dodaj minimalny test renderowania App.
+- [ ] 🟡 [nit] **packages/backend/src/auth/login.ts:11-12** — Timing-safe compare leakuje informacje o dlugosci hasla.
+- [ ] 🟡 [nit] **packages/backend/src/db/seed-liabilities.ts:209-227** — N+1 inserts w petli zamiast batch.
+- [ ] 🟡 [nit] **packages/backend/src/db/seed-entities.ts:20-28** — N+1 inserts w petli zamiast batch.
+- [ ] 🟡 [nit] **packages/backend/package.json, packages/frontend/package.json** — Lint script to echo, brak konfiguracji lintera.
+- [ ] 🟡 [nit] **packages/backend/src/db/connection.ts:7-11** — Module-level side effect przy tworzeniu sql client.
+
+---
+
 ## Faza 2: Pipeline ingestion
 
 ### Unit 4: Parser plików Saldeo (Excel) [L]
