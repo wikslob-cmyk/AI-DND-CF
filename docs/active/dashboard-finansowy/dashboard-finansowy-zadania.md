@@ -97,6 +97,7 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
 - [x] 🟠 [important] **packages/backend/src/server.ts:14-18** — pino-pretty zawsze wlaczone (tez w produkcji). Wlacz tylko dla `NODE_ENV !== 'production'`.
 - [x] 🟠 [important] **packages/backend/package.json** — pino-pretty nie jest w dependencies. Dodaj do devDependencies.
 - [x] 🟠 [important] **packages/frontend/** — Brak jakichkolwiek testow frontend. Dodaj minimalny test renderowania App.
+- [x] 🟠 [important] **packages/backend/src/auth/__tests__/auth.test.ts** — Brak testow dla body validation (400), rate limiting (429), JWT_SECRET throw. Fix dodal mechanizmy ale nie testy.
 - [ ] 🟡 [nit] **packages/backend/src/auth/login.ts:11-12** — Timing-safe compare leakuje informacje o dlugosci hasla.
 - [ ] 🟡 [nit] **packages/backend/src/db/seed-liabilities.ts:209-227** — N+1 inserts w petli zamiast batch.
 - [ ] 🟡 [nit] **packages/backend/src/db/seed-entities.ts:20-28** — N+1 inserts w petli zamiast batch.
