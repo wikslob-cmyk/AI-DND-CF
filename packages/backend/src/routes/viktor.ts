@@ -39,6 +39,12 @@ export async function registerViktorRoutes(
       schema: {
         body: CHAT_BODY_SCHEMA,
       },
+      config: {
+        rateLimit: {
+          max: 20,
+          timeWindow: "1 minute",
+        },
+      },
     },
     async (
       request: FastifyRequest<{ Body: ChatBody }>,
