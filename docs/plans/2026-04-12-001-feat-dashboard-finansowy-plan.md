@@ -295,7 +295,7 @@ Viktor otrzymuje system prompt z kontekstem biznesowym (nazwy podmiotów, skrót
 
 ### Faza 1: Fundament
 
-- [ ] **Unit 1: Scaffolding monorepo + konfiguracja**
+- [x] **Unit 1: Scaffolding monorepo + konfiguracja**
 
   **Cel:** Działający monorepo z pnpm workspaces, TypeScript, ESLint, Docker Compose dla dev PostgreSQL.
 
@@ -348,7 +348,7 @@ Viktor otrzymuje system prompt z kontekstem biznesowym (nazwy podmiotów, skrót
 
 ---
 
-- [ ] **Unit 2: Schema bazy danych + migracje**
+- [x] **Unit 2: Schema bazy danych + migracje**
 
   **Cel:** Kompletny schemat PostgreSQL z tabelami, indeksami i migracjami.
 
@@ -387,7 +387,7 @@ Viktor otrzymuje system prompt z kontekstem biznesowym (nazwy podmiotów, skrót
 
 ---
 
-- [ ] **Unit 3: Autoryzacja (shared password + JWT)**
+- [x] **Unit 3: Autoryzacja (shared password + JWT)**
 
   **Cel:** Endpoint logowania, middleware JWT, ochrona tras API.
 

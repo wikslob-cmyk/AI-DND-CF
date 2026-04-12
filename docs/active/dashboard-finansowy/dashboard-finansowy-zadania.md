@@ -1,7 +1,7 @@
 # Dashboard finansowy — Zadania
 
 Branch: `feature/dashboard-finansowy`
-Ostatnia aktualizacja: 2026-04-12
+Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
 
 ---
 
@@ -10,31 +10,31 @@ Ostatnia aktualizacja: 2026-04-12
 ### Unit 1: Scaffolding monorepo + konfiguracja [L]
 
 **Implementacja:**
-- [ ] Stwórz `pnpm-workspace.yaml` z `packages/*`
-- [ ] Stwórz root `package.json` z workspace config
-- [ ] Stwórz `tsconfig.base.json` (strict mode, path aliases)
-- [ ] Stwórz `.nvmrc` (Node 22 LTS)
-- [ ] Stwórz `.gitignore` (node_modules, dist, .env, *.log)
-- [ ] Stwórz `.env.example` (DATABASE_URL, DASHBOARD_PASSWORD, JWT_SECRET, ANTHROPIC_API_KEY, NBP_API_URL)
-- [ ] Stwórz `packages/shared/package.json` + `tsconfig.json`
-- [ ] Stwórz `packages/shared/src/index.ts` (EntityCode, InvoiceType, enums)
-- [ ] Stwórz `packages/backend/package.json` (fastify, @fastify/cors, @fastify/cookie, @fastify/multipart, postgres)
-- [ ] Stwórz `packages/backend/tsconfig.json`
-- [ ] Stwórz `packages/backend/src/server.ts` (Fastify bootstrap, health endpoint)
-- [ ] Stwórz `packages/frontend/package.json` (react 19, vite, tailwindcss v4, @tanstack/react-query)
-- [ ] Stwórz `packages/frontend/tsconfig.json`
-- [ ] Stwórz `packages/frontend/vite.config.ts` (proxy /api → localhost:3001)
-- [ ] Stwórz `packages/frontend/index.html`
-- [ ] Stwórz `packages/frontend/src/main.tsx`
-- [ ] Stwórz `packages/frontend/src/app.tsx`
-- [ ] Stwórz `docker-compose.yml` (PostgreSQL 16 na porcie 5432, volume)
-- [ ] Uruchom `pnpm install` + zweryfikuj brak błędów
+- [x] Stwórz `pnpm-workspace.yaml` z `packages/*`
+- [x] Stwórz root `package.json` z workspace config
+- [x] Stwórz `tsconfig.base.json` (strict mode, path aliases)
+- [x] Stwórz `.nvmrc` (Node 22 LTS)
+- [x] Stwórz `.gitignore` (node_modules, dist, .env, *.log)
+- [x] Stwórz `.env.example` (DATABASE_URL, DASHBOARD_PASSWORD, JWT_SECRET, ANTHROPIC_API_KEY, NBP_API_URL)
+- [x] Stwórz `packages/shared/package.json` + `tsconfig.json`
+- [x] Stwórz `packages/shared/src/index.ts` (EntityCode, InvoiceType, enums)
+- [x] Stwórz `packages/backend/package.json` (fastify, @fastify/cors, @fastify/cookie, @fastify/multipart, postgres)
+- [x] Stwórz `packages/backend/tsconfig.json`
+- [x] Stwórz `packages/backend/src/server.ts` (Fastify bootstrap, health endpoint)
+- [x] Stwórz `packages/frontend/package.json` (react 19, vite, tailwindcss v4, @tanstack/react-query)
+- [x] Stwórz `packages/frontend/tsconfig.json`
+- [x] Stwórz `packages/frontend/vite.config.ts` (proxy /api → localhost:3001)
+- [x] Stwórz `packages/frontend/index.html`
+- [x] Stwórz `packages/frontend/src/main.tsx`
+- [x] Stwórz `packages/frontend/src/app.tsx`
+- [x] Stwórz `docker-compose.yml` (PostgreSQL 16 na porcie 5432, volume)
+- [x] Uruchom `pnpm install` + zweryfikuj brak błędów
 
 **Testy:**
-- [ ] Test: `pnpm install` wykonuje się bez błędów
-- [ ] Test: `pnpm --filter backend dev` startuje Fastify na porcie 3001
-- [ ] Test: `pnpm --filter frontend dev` startuje Vite na porcie 5173 z proxy
-- [ ] Test: TypeScript kompiluje się bez błędów we wszystkich packages
+- [x] Test: `pnpm install` wykonuje się bez błędów
+- [x] Test: `pnpm --filter backend dev` startuje Fastify na porcie 3001
+- [x] Test: `pnpm --filter frontend dev` startuje Vite na porcie 5173 z proxy
+- [x] Test: TypeScript kompiluje się bez błędów we wszystkich packages
 
 **Weryfikacja:**
 - [ ] Weryfikacja: Oba serwery dev startują poprawnie
@@ -46,18 +46,18 @@ Ostatnia aktualizacja: 2026-04-12
 ### Unit 2: Schema bazy danych + migracje [M]
 
 **Implementacja:**
-- [ ] Stwórz `packages/backend/src/db/connection.ts` (postgres client z DATABASE_URL)
-- [ ] Stwórz `packages/backend/src/db/migrations/001-initial-schema.sql` (entity, import_log, invoice, exchange_rate, liability, liability_schedule, warehouse_item, monthly_input + indeksy)
-- [ ] Stwórz `packages/backend/src/db/migrate.ts` (runner: tabela _migrations, idempotentne wykonanie)
-- [ ] Stwórz `packages/backend/src/db/seed-entities.ts` (5 podmiotów: cgesp, dngro, dndsp, tdmsp, tdpsp)
-- [ ] Stwórz `packages/backend/src/db/seed-liabilities.ts` (15 pozycji master + ING limit/faktoring + pozycje informacyjne)
-- [ ] Stwórz `packages/backend/src/db/__tests__/migrations.test.ts`
+- [x] Stwórz `packages/backend/src/db/connection.ts` (postgres client z DATABASE_URL)
+- [x] Stwórz `packages/backend/src/db/migrations/001-initial-schema.sql` (entity, import_log, invoice, exchange_rate, liability, liability_schedule, warehouse_item, monthly_input + indeksy)
+- [x] Stwórz `packages/backend/src/db/migrate.ts` (runner: tabela _migrations, idempotentne wykonanie)
+- [x] Stwórz `packages/backend/src/db/seed-entities.ts` (5 podmiotów: cgesp, dngro, dndsp, tdmsp, tdpsp)
+- [x] Stwórz `packages/backend/src/db/seed-liabilities.ts` (15 pozycji master + ING limit/faktoring + pozycje informacyjne)
+- [x] Stwórz `packages/backend/src/db/__tests__/migrations.test.ts`
 
 **Testy:**
-- [ ] Test: Migracja tworzy wszystkie tabele i indeksy
-- [ ] Test: Seed wstawia 5 encji i 15 pozycji liability
-- [ ] Test: Powtórne uruchomienie migracji jest idempotentne
-- [ ] Test: UNIQUE constraint na monthly_input(entity_code, year, month) działa
+- [x] Test: Migracja tworzy wszystkie tabele i indeksy
+- [x] Test: Seed wstawia 5 encji i 15 pozycji liability
+- [x] Test: Powtórne uruchomienie migracji jest idempotentne
+- [x] Test: UNIQUE constraint na monthly_input(entity_code, year, month) działa
 
 **Weryfikacja:**
 - [ ] Weryfikacja: Wszystkie tabele istnieją z poprawnymi typami kolumn
@@ -68,18 +68,18 @@ Ostatnia aktualizacja: 2026-04-12
 ### Unit 3: Autoryzacja (shared password + JWT) [S]
 
 **Implementacja:**
-- [ ] Stwórz `packages/backend/src/auth/constants.ts` (cookie config, JWT expiry 30d)
-- [ ] Stwórz `packages/backend/src/auth/login.ts` (POST /api/auth/login — timing-safe compare, JWT → HttpOnly cookie)
-- [ ] Stwórz `packages/backend/src/auth/middleware.ts` (onRequest hook — verify JWT, 401)
-- [ ] Zarejestruj @fastify/jwt i @fastify/cookie w server.ts
-- [ ] Stwórz `packages/backend/src/auth/__tests__/auth.test.ts`
+- [x] Stwórz `packages/backend/src/auth/constants.ts` (cookie config, JWT expiry 30d)
+- [x] Stwórz `packages/backend/src/auth/login.ts` (POST /api/auth/login — timing-safe compare, JWT → HttpOnly cookie)
+- [x] Stwórz `packages/backend/src/auth/middleware.ts` (onRequest hook — verify JWT, 401)
+- [x] Zarejestruj @fastify/jwt i @fastify/cookie w server.ts
+- [x] Stwórz `packages/backend/src/auth/__tests__/auth.test.ts`
 
 **Testy:**
-- [ ] Test: Poprawne hasło → 200 + cookie z JWT
-- [ ] Test: Błędne hasło → 401
-- [ ] Test: Request bez cookie → 401 na chronionym endpoint
-- [ ] Test: Request z ważnym JWT → 200
-- [ ] Test: Request z expired JWT → 401
+- [x] Test: Poprawne hasło → 200 + cookie z JWT
+- [x] Test: Błędne hasło → 401
+- [x] Test: Request bez cookie → 401 na chronionym endpoint
+- [x] Test: Request z ważnym JWT → 200
+- [x] Test: Request z expired JWT → 401
 - [ ] Test: [E2E] Formularz logowania → wpisanie hasła → redirect do dashboardu
 
 **Weryfikacja:**
@@ -442,7 +442,7 @@ Ostatnia aktualizacja: 2026-04-12
 
 | Faza | Unity | Status |
 |---|---|---|
-| 1. Fundament | 1, 2, 3 | - |
+| 1. Fundament | 1, 2, 3 | ✅ Implementacja ukończona, awaiting review |
 | 2. Ingestion | 4, 5, 6, 7 | - |
 | 3. Dashboard | 8, 9, 10, 11, 12 | - |
 | 4. AI | 13, 14 | - |

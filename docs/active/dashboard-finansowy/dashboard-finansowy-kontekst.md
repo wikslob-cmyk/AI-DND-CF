@@ -1,7 +1,7 @@
 # Dashboard finansowy — Kontekst techniczny
 
 Branch: `feature/dashboard-finansowy`
-Ostatnia aktualizacja: 2026-04-12
+Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
 
 ## Podmioty grupy
 
@@ -192,6 +192,19 @@ Ostatnia aktualizacja: 2026-04-12
 | `get_cashflow_projection` | Projekcja płynności na N dni |
 | `get_warehouse_value` | Stan i wartość magazynu |
 | `get_entity_summary` | Podsumowanie podmiotu |
+
+## Historia zmian
+
+### Faza 1: Fundament (2026-04-12)
+- Scaffold monorepo: pnpm workspaces, 3 packages (frontend, backend, shared)
+- Frontend: React 19 + Vite 5.4 + TailwindCSS v4 + vitest 3.2
+- Backend: Fastify 5 + TypeScript strict + vitest 3.2
+- Shared: EntityCode, InvoiceType, LiabilityType enums i type guards
+- DB: PostgreSQL schema (8 tabel, 4 indeksy), migration runner, seed data
+- Auth: JWT HttpOnly cookie (30d), timing-safe password compare, middleware
+- Vite 5.x used instead of 6+ due to Node 24 incompatibility with `#module-sync-enabled` package imports
+- E2E login test deferred (requires running frontend + backend)
+- cross-env added to root for Windows compatibility
 
 ## Źródła
 - Requirements doc: `docs/dev-brainstorms/2026-04-11-dashboard-finansowy-requirements.md`
