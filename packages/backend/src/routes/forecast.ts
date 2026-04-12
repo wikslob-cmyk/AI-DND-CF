@@ -1,9 +1,12 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { sql } from "../db/connection.js";
 import { authMiddleware } from "../auth/middleware.js";
+import { toAmountPln } from "../db/invoice-queries.js";
+import { validateEntity } from "./validate-entity.js";
 
 interface ForecastQuery {
   days?: string;
+  entity?: string;
 }
 
 interface WeekBucket {
@@ -25,6 +28,9 @@ export async function registerForecastRoutes(
       request: FastifyRequest<{ Querystring: ForecastQuery }>,
       reply: FastifyReply,
     ) => {
+      const entity = validateEntity(request.query.entity, reply);
+      if (entity === null) return;
+
       const days = Math.min(Number(request.query.days) || 30, 90);
 
       const today = new Date();
@@ -33,33 +39,62 @@ export async function registerForecastRoutes(
       const endDateStr = endDate.toISOString().split("T")[0] as string;
 
       // Future receivables (naive forecast)
-      const futureRows = await sql`
-        SELECT i.*, COALESCE(er.rate_pln, 1) AS rate_pln
-        FROM invoice i
-        LEFT JOIN LATERAL (
-          SELECT rate_pln FROM exchange_rate
-          WHERE currency = i.currency
-          ORDER BY rate_date DESC LIMIT 1
-        ) er ON TRUE
-        WHERE i.document_type = 'FS'
-          AND i.payment_due >= ${todayStr}
-          AND i.payment_due < ${endDateStr}
-        ORDER BY i.payment_due
-      `;
+      const futureRows = entity === "all"
+        ? await sql`
+          SELECT i.*, COALESCE(er.rate_pln, 1) AS rate_pln
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = 'FS'
+            AND i.payment_due >= ${todayStr}
+            AND i.payment_due < ${endDateStr}
+          ORDER BY i.payment_due
+        `
+        : await sql`
+          SELECT i.*, COALESCE(er.rate_pln, 1) AS rate_pln
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = 'FS'
+            AND i.entity_code = ${entity}
+            AND i.payment_due >= ${todayStr}
+            AND i.payment_due < ${endDateStr}
+          ORDER BY i.payment_due
+        `;
 
       // Overdue receivables (separate section)
-      const overdueRows = await sql`
-        SELECT i.*, COALESCE(er.rate_pln, 1) AS rate_pln
-        FROM invoice i
-        LEFT JOIN LATERAL (
-          SELECT rate_pln FROM exchange_rate
-          WHERE currency = i.currency
-          ORDER BY rate_date DESC LIMIT 1
-        ) er ON TRUE
-        WHERE i.document_type = 'FS'
-          AND i.payment_due < ${todayStr}
-        ORDER BY i.payment_due
-      `;
+      const overdueRows = entity === "all"
+        ? await sql`
+          SELECT i.*, COALESCE(er.rate_pln, 1) AS rate_pln
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = 'FS'
+            AND i.payment_due < ${todayStr}
+          ORDER BY i.payment_due
+        `
+        : await sql`
+          SELECT i.*, COALESCE(er.rate_pln, 1) AS rate_pln
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = 'FS'
+            AND i.entity_code = ${entity}
+            AND i.payment_due < ${todayStr}
+          ORDER BY i.payment_due
+        `;
 
       // Group future receivables by week
       const weeks: WeekBucket[] = [];
@@ -91,11 +126,11 @@ export async function registerForecastRoutes(
           weekCount - 1,
         );
 
-        const ratePln = Number(row.rate_pln);
-        const remainingPln =
-          row.currency === "PLN"
-            ? Number(row.remaining_amount)
-            : Number(row.remaining_amount) * ratePln;
+        const remainingPln = toAmountPln(
+          row.currency,
+          row.remaining_amount,
+          row.rate_pln,
+        );
 
         const week = weeks[weekIdx];
         if (week) {
@@ -116,11 +151,11 @@ export async function registerForecastRoutes(
       // Process overdue
       let overdueTotalPln = 0;
       const overdueInvoices = overdueRows.map((row) => {
-        const ratePln = Number(row.rate_pln);
-        const remainingPln =
-          row.currency === "PLN"
-            ? Number(row.remaining_amount)
-            : Number(row.remaining_amount) * ratePln;
+        const remainingPln = toAmountPln(
+          row.currency,
+          row.remaining_amount,
+          row.rate_pln,
+        );
         overdueTotalPln += remainingPln;
         return {
           id: row.id,
@@ -141,6 +176,7 @@ export async function registerForecastRoutes(
 
       return reply.send({
         data: {
+          entity,
           days,
           forecast: {
             totalPln: forecastTotalPln,

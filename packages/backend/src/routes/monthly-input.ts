@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { sql } from "../db/connection.js";
 import { authMiddleware } from "../auth/middleware.js";
+import { validateEntity } from "./validate-entity.js";
 
 interface MonthlyInputQuery {
   entity: string;
@@ -51,14 +52,16 @@ export async function registerMonthlyInputRoutes(
       request: FastifyRequest<{ Querystring: MonthlyInputQuery }>,
       reply: FastifyReply,
     ) => {
-      const { entity, year, month } = request.query;
+      const { year, month } = request.query;
+      const entity = validateEntity(request.query.entity, reply);
+      if (entity === null) return;
 
-      if (!entity || !year || !month) {
+      if (!year || !month) {
         return reply.status(400).send({
           data: null,
           error: {
             code: "VALIDATION_ERROR",
-            message: "Wymagane parametry: entity, year, month",
+            message: "Wymagane parametry: year, month",
           },
         });
       }

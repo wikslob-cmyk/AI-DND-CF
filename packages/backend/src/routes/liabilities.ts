@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { sql } from "../db/connection.js";
 import { authMiddleware } from "../auth/middleware.js";
+import { validateEntity } from "./validate-entity.js";
 
 interface LiabilityQuery {
   entity?: string;
@@ -23,7 +24,9 @@ export async function registerLiabilitiesRoutes(
       request: FastifyRequest<{ Querystring: LiabilityQuery }>,
       reply: FastifyReply,
     ) => {
-      const entity = request.query.entity || "all";
+      const entity = validateEntity(request.query.entity, reply);
+      if (entity === null) return;
+
       const type = request.query.type || "all";
 
       let rows;
@@ -88,7 +91,9 @@ export async function registerLiabilitiesRoutes(
       request: FastifyRequest<{ Querystring: ScheduleQuery }>,
       reply: FastifyReply,
     ) => {
-      const entity = request.query.entity || "all";
+      const entity = validateEntity(request.query.entity, reply);
+      if (entity === null) return;
+
       const months = Math.min(Number(request.query.months) || 12, 36);
 
       const today = new Date();

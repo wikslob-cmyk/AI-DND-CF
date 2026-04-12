@@ -388,6 +388,22 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 
 ---
 
+## Do poprawy po review fazy 3
+
+- [x] 🟠 [important] **packages/backend/src/routes/*.ts** — Brak walidacji `entity` query param. Dowolna wartosc przechodzi bez bledu 400. Dodaj walidacje dozwolonych kodow (all, cgesp, dngro, dndsp, tdmsp, tdpsp) we wszystkich 7 route modulach.
+- [x] 🟠 [important] **packages/backend/src/routes/receivables.ts:19-110** — Masywna duplikacja SQL (6 blokow, 90+ linii). Wyodrebnij budowanie WHERE clause do helpera. Dotyczy tez dashboard-summary.ts.
+- [x] 🟠 [important] **packages/frontend/src/features/** — Brak testow dla 15 nowych komponentow Fazy 3 (summary-cards, invoice-table, entity-tabs, monthly-input-form, etc.). Dodaj minimum smoke testy.
+- [x] 🟠 [important] **packages/backend/src/routes/__tests__/** — Brak testow error handling: auth 401 (tylko payables ma), bledne parametry, blad DB. Dodaj do kazdego route test suite.
+- [x] 🟠 [important] **packages/backend/src/routes/forecast.ts** — Brak filtra `entity` — endpoint zwraca WSZYSTKIE naleznosci niezaleznie od podmiotu. Dodaj parametr entity analogicznie do receivables.
+- [x] 🟠 [important] **Root vitest config** — Brak workspace config. Uruchomienie z roota powoduje 11 failujacych testow frontend (brak jsdom). Dodaj vitest.workspace.ts.
+- [ ] 🟡 [nit] **packages/backend/src/routes/dashboard-summary.ts** — 8 sekwencyjnych SQL zapytan. Zrownolegnij z Promise.all.
+- [ ] 🟡 [nit] **packages/frontend/src/features/monthly-input/monthly-input-form.tsx:186** — Hardcoded years [2024-2027]. Generuj dynamicznie.
+- [ ] 🟡 [nit] **packages/backend/src/routes/receivables.ts:125-128, forecast.ts:95-98** — Duplikacja logiki przeliczania walut. Wyciagnij do helpera.
+- [ ] 🟡 [nit] **packages/frontend/src/features/auth/login-page.tsx** — Brak sprawdzenia /api/auth/me — zalogowany user widzi login page.
+- [ ] 🟡 [nit] **packages/backend/src/routes/__tests__/monthly-input.test.ts** — Brak testu NaN year/month i PUT schema validation (brakujacy field, zly typ).
+
+---
+
 ## Faza 4: AI i projekcja
 
 ### Unit 13: Viktor AI — Claude API + function calling [L]

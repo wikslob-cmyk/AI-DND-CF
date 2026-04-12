@@ -1,6 +1,11 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { sql } from "../db/connection.js";
 import { authMiddleware } from "../auth/middleware.js";
+import {
+  queryInvoiceTotalPln,
+  queryOverdueTotalPln,
+} from "../db/invoice-queries.js";
+import { validateEntity } from "./validate-entity.js";
 
 interface SummaryQuery {
   entity?: string;
@@ -17,7 +22,9 @@ export async function registerDashboardSummaryRoutes(
       request: FastifyRequest<{ Querystring: SummaryQuery }>,
       reply: FastifyReply,
     ) => {
-      const entity = request.query.entity || "all";
+      const entity = validateEntity(request.query.entity, reply);
+      if (entity === null) return;
+
       const today = new Date();
       const todayStr = today.toISOString().split("T")[0] as string;
       const in30Str = new Date(Date.now() + 30 * 86400000)
@@ -28,76 +35,20 @@ export async function registerDashboardSummaryRoutes(
       const currentMonth = today.getMonth() + 1;
 
       // 1. Receivables total (next 30 days)
-      const [receivablesRow] = entity === "all"
-        ? await sql`
-          SELECT COALESCE(SUM(
-            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
-                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
-            END
-          ), 0) AS total
-          FROM invoice i
-          LEFT JOIN LATERAL (
-            SELECT rate_pln FROM exchange_rate
-            WHERE currency = i.currency
-            ORDER BY rate_date DESC LIMIT 1
-          ) er ON TRUE
-          WHERE i.document_type = 'FS'
-            AND i.payment_due >= ${todayStr}
-            AND i.payment_due < ${in30Str}
-        `
-        : await sql`
-          SELECT COALESCE(SUM(
-            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
-                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
-            END
-          ), 0) AS total
-          FROM invoice i
-          LEFT JOIN LATERAL (
-            SELECT rate_pln FROM exchange_rate
-            WHERE currency = i.currency
-            ORDER BY rate_date DESC LIMIT 1
-          ) er ON TRUE
-          WHERE i.document_type = 'FS'
-            AND i.payment_due >= ${todayStr}
-            AND i.payment_due < ${in30Str}
-            AND i.entity_code = ${entity}
-        `;
+      const receivables30d = await queryInvoiceTotalPln(
+        "FS",
+        entity,
+        todayStr,
+        in30Str,
+      );
 
       // 2. Payables total (next 30 days)
-      const [payablesRow] = entity === "all"
-        ? await sql`
-          SELECT COALESCE(SUM(
-            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
-                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
-            END
-          ), 0) AS total
-          FROM invoice i
-          LEFT JOIN LATERAL (
-            SELECT rate_pln FROM exchange_rate
-            WHERE currency = i.currency
-            ORDER BY rate_date DESC LIMIT 1
-          ) er ON TRUE
-          WHERE i.document_type = 'FZ'
-            AND i.payment_due >= ${todayStr}
-            AND i.payment_due < ${in30Str}
-        `
-        : await sql`
-          SELECT COALESCE(SUM(
-            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
-                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
-            END
-          ), 0) AS total
-          FROM invoice i
-          LEFT JOIN LATERAL (
-            SELECT rate_pln FROM exchange_rate
-            WHERE currency = i.currency
-            ORDER BY rate_date DESC LIMIT 1
-          ) er ON TRUE
-          WHERE i.document_type = 'FZ'
-            AND i.payment_due >= ${todayStr}
-            AND i.payment_due < ${in30Str}
-            AND i.entity_code = ${entity}
-        `;
+      const payables30d = await queryInvoiceTotalPln(
+        "FZ",
+        entity,
+        todayStr,
+        in30Str,
+      );
 
       // 3. Financial liabilities (next 30 days)
       let liabilitiesTotal = 0;
@@ -190,48 +141,21 @@ export async function registerDashboardSummaryRoutes(
       `;
 
       // 7. Overdue receivables
-      const [overdueRow] = entity === "all"
-        ? await sql`
-          SELECT COALESCE(SUM(
-            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
-                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
-            END
-          ), 0) AS total
-          FROM invoice i
-          LEFT JOIN LATERAL (
-            SELECT rate_pln FROM exchange_rate
-            WHERE currency = i.currency
-            ORDER BY rate_date DESC LIMIT 1
-          ) er ON TRUE
-          WHERE i.document_type = 'FS'
-            AND i.payment_due < ${todayStr}
-        `
-        : await sql`
-          SELECT COALESCE(SUM(
-            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
-                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
-            END
-          ), 0) AS total
-          FROM invoice i
-          LEFT JOIN LATERAL (
-            SELECT rate_pln FROM exchange_rate
-            WHERE currency = i.currency
-            ORDER BY rate_date DESC LIMIT 1
-          ) er ON TRUE
-          WHERE i.document_type = 'FS'
-            AND i.payment_due < ${todayStr}
-            AND i.entity_code = ${entity}
-        `;
+      const overdueReceivables = await queryOverdueTotalPln(
+        "FS",
+        entity,
+        todayStr,
+      );
 
       return reply.send({
         data: {
           entity,
-          receivables30d: Number(receivablesRow?.total ?? 0),
-          payables30d: Number(payablesRow?.total ?? 0),
+          receivables30d,
+          payables30d,
           liabilities30d: liabilitiesTotal,
           bankBalance: Number(balanceRow?.total ?? 0),
           warehouseValue,
-          overdueReceivables: Number(overdueRow?.total ?? 0),
+          overdueReceivables,
           lastImport: importRow
             ? {
                 importedAt: importRow.imported_at,

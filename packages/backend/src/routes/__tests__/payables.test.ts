@@ -81,4 +81,17 @@ describe("payables routes", () => {
 
     expect(response.statusCode).toBe(401);
   });
+
+  it("returns 400 for invalid entity param", async () => {
+    const token = signToken(app);
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/payables?entity=xxx&period=7d",
+      headers: { cookie: `dashboard_token=${token}` },
+    });
+
+    expect(response.statusCode).toBe(400);
+    const body = JSON.parse(response.body);
+    expect(body.error.code).toBe("VALIDATION_ERROR");
+  });
 });

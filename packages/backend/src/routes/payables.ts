@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { authMiddleware } from "../auth/middleware.js";
-import { queryInvoices } from "./receivables.js";
+import { queryInvoices } from "../db/invoice-queries.js";
+import { validateEntity } from "./validate-entity.js";
 
 interface InvoiceQuery {
   entity?: string;
@@ -18,7 +19,9 @@ export async function registerPayablesRoutes(
       request: FastifyRequest<{ Querystring: InvoiceQuery }>,
       reply: FastifyReply,
     ) => {
-      const entity = request.query.entity || "all";
+      const entity = validateEntity(request.query.entity, reply);
+      if (entity === null) return;
+
       const period = request.query.period || "7d";
 
       const result = await queryInvoices("FZ", entity, period);

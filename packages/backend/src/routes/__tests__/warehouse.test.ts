@@ -38,6 +38,28 @@ describe("warehouse routes", () => {
     await app.close();
   });
 
+  it("returns 401 without auth", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/warehouse",
+    });
+
+    expect(response.statusCode).toBe(401);
+  });
+
+  it("returns 400 for invalid entity param", async () => {
+    const token = signToken(app);
+    const response = await app.inject({
+      method: "GET",
+      url: "/api/warehouse?entity=invalid",
+      headers: { cookie: `dashboard_token=${token}` },
+    });
+
+    expect(response.statusCode).toBe(400);
+    const body = JSON.parse(response.body);
+    expect(body.error.code).toBe("VALIDATION_ERROR");
+  });
+
   it("GET warehouse returns items with quantities, values and total", async () => {
     mockSql.mockResolvedValueOnce([
       {
