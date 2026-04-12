@@ -72,7 +72,7 @@ describe("FileDropzone", () => {
     fireEvent.change(input, { target: { files } });
 
     expect(onFilesSelected).toHaveBeenCalledTimes(1);
-    const selectedFiles = onFilesSelected.mock.calls[0][0] as File[];
+    const selectedFiles = onFilesSelected.mock.calls[0]?.[0] as File[];
     expect(selectedFiles).toHaveLength(2);
   });
 
