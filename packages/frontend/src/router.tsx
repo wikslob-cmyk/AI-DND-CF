@@ -59,6 +59,12 @@ const ImportPage = lazy(() =>
   })),
 );
 
+const ViktorPage = lazy(() =>
+  import("@/features/viktor/viktor-chat").then((m) => ({
+    default: m.ViktorChat,
+  })),
+);
+
 function Loading(): React.ReactNode {
   return (
     <p className="py-8 text-center text-gray-500">Ladowanie...</p>
@@ -139,6 +145,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<Loading />}>
             <ImportPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: "viktor",
+        element: (
+          <Suspense fallback={<Loading />}>
+            <ViktorPage />
           </Suspense>
         ),
       },

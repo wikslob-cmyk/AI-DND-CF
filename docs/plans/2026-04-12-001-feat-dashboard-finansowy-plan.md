@@ -815,7 +815,7 @@ Viktor otrzymuje system prompt z kontekstem biznesowym (nazwy podmiotów, skrót
 
 ### Faza 4: AI i projekcja
 
-- [ ] **Unit 13: Viktor AI — Claude API + function calling**
+- [x] **Unit 13: Viktor AI — Claude API + function calling**
 
   **Cel:** Chat z Viktorem: Claude API z narzędziami (function calling) odpowiadający na pytania finansowe.
 
@@ -863,7 +863,7 @@ Viktor otrzymuje system prompt z kontekstem biznesowym (nazwy podmiotów, skrót
 
 ---
 
-- [ ] **Unit 14: Projekcja cashflow (on-demand)**
+- [x] **Unit 14: Projekcja cashflow (on-demand)**
 
   **Cel:** Narzędzie Viktora `get_cashflow_projection` + dedykowany endpoint API. Formuła z R9.
 

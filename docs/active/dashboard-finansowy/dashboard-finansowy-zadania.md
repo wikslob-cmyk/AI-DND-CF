@@ -409,22 +409,22 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 ### Unit 13: Viktor AI — Claude API + function calling [L]
 
 **Implementacja:**
-- [ ] Stwórz `packages/backend/src/viktor/system-prompt.ts` (kontekst biznesowy: 5 podmiotów, kody, waluty, instrukcje po polsku)
-- [ ] Stwórz `packages/backend/src/viktor/tools.ts` (7 narzędzi: get_receivables, get_payables, get_overdue, get_liability_schedule, get_cashflow_projection, get_warehouse_value, get_entity_summary)
-- [ ] Stwórz `packages/backend/src/viktor/model-router.ts` (keyword heuristic: prognoza/ryzyko/cashflow → Sonnet, reszta → Haiku)
-- [ ] Stwórz `packages/backend/src/viktor/chat.ts` (Anthropic SDK, function calling loop, cost logging)
-- [ ] Stwórz `packages/backend/src/routes/viktor.ts` (POST /api/viktor/chat → SSE streaming)
-- [ ] Stwórz `packages/frontend/src/features/viktor/message-bubble.tsx`
-- [ ] Stwórz `packages/frontend/src/features/viktor/viktor-chat.tsx` (panel czatu, input, historia, SSE)
-- [ ] Stwórz `packages/backend/src/viktor/__tests__/tools.test.ts`
-- [ ] Stwórz `packages/backend/src/viktor/__tests__/model-router.test.ts`
+- [x] Stwórz `packages/backend/src/viktor/system-prompt.ts` (kontekst biznesowy: 5 podmiotów, kody, waluty, instrukcje po polsku)
+- [x] Stwórz `packages/backend/src/viktor/tools.ts` (7 narzędzi: get_receivables, get_payables, get_overdue, get_liability_schedule, get_cashflow_projection, get_warehouse_value, get_entity_summary)
+- [x] Stwórz `packages/backend/src/viktor/model-router.ts` (keyword heuristic: prognoza/ryzyko/cashflow → Sonnet, reszta → Haiku)
+- [x] Stwórz `packages/backend/src/viktor/chat.ts` (Anthropic SDK, function calling loop, cost logging)
+- [x] Stwórz `packages/backend/src/routes/viktor.ts` (POST /api/viktor/chat → SSE streaming)
+- [x] Stwórz `packages/frontend/src/features/viktor/message-bubble.tsx`
+- [x] Stwórz `packages/frontend/src/features/viktor/viktor-chat.tsx` (panel czatu, input, historia, SSE)
+- [x] Stwórz `packages/backend/src/viktor/__tests__/tools.test.ts`
+- [x] Stwórz `packages/backend/src/viktor/__tests__/model-router.test.ts`
 
 **Testy:**
-- [ ] Test: Model router: "ile mamy zobowiązań?" → Haiku
-- [ ] Test: Model router: "czy grupa ma ryzyko płynności?" → Sonnet
-- [ ] Test: Tool `get_receivables` zwraca poprawne dane z DB
-- [ ] Test: Tool error → fallback tekstowy
-- [ ] Test: System prompt zawiera kontekst 5 podmiotów
+- [x] Test: Model router: "ile mamy zobowiązań?" → Haiku
+- [x] Test: Model router: "czy grupa ma ryzyko płynności?" → Sonnet
+- [x] Test: Tool `get_receivables` zwraca poprawne dane z DB
+- [x] Test: Tool error → fallback tekstowy
+- [x] Test: System prompt zawiera kontekst 5 podmiotów
 - [ ] Test: [E2E] Viktor chat → "Ile łącznie wynoszą zobowiązania CGE?" → odpowiedź z kwotą PLN
 - [ ] Test: [E2E] Viktor chat → "Który kontrahent ma najwyższe przeterminowane?" → odpowiedź z nazwą i kwotą
 
@@ -438,24 +438,24 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 ### Unit 14: Projekcja cashflow (on-demand) [M]
 
 **Implementacja:**
-- [ ] Stwórz `packages/backend/src/services/cashflow-projection.ts`:
+- [x] Stwórz `packages/backend/src/services/cashflow-projection.ts`:
   - Formuła: saldo_grupy_start + wpływy_30d − wypływy_30d
   - saldo_start = suma bank_balance z monthly_input (5 podmiotów, aktualny miesiąc)
   - wpływy_30d = należności [dziś, dziś+30), BEZ przeterminowanych
   - wypływy_30d = raty harmonogramów + rolling ING pro-rata + zobowiązania handlowe + wynagrodzenia pro-rata + VAT (25. następnego miesiąca)
   - Próg: wynik < 0.15 × wypływy_30d → warning, < 0 → critical
   - Brak salda → warning "Brak danych salda bankowego"
-- [ ] Stwórz `packages/backend/src/routes/cashflow.ts` (GET /api/cashflow?days=30)
-- [ ] Podłącz jako tool `get_cashflow_projection` w Viktor tools
-- [ ] Stwórz `packages/backend/src/services/__tests__/cashflow-projection.test.ts`
+- [x] Stwórz `packages/backend/src/routes/cashflow.ts` (GET /api/cashflow?days=30)
+- [x] Podłącz jako tool `get_cashflow_projection` w Viktor tools
+- [x] Stwórz `packages/backend/src/services/__tests__/cashflow-projection.test.ts`
 
 **Testy:**
-- [ ] Test: Projekcja z pełnymi danymi → poprawne sumy i risk_level
-- [ ] Test: Projekcja < 15% wypływów → risk_level = 'warning'
-- [ ] Test: Projekcja < 0 → risk_level = 'critical'
-- [ ] Test: Brak salda bankowego → warning w odpowiedzi
-- [ ] Test: Przeterminowane należności NIE wliczone do wpływów_30d
-- [ ] Test: ING rolling pro-rata: 30/30 × kwota miesięczna
+- [x] Test: Projekcja z pełnymi danymi → poprawne sumy i risk_level
+- [x] Test: Projekcja < 15% wypływów → risk_level = 'warning'
+- [x] Test: Projekcja < 0 → risk_level = 'critical'
+- [x] Test: Brak salda bankowego → warning w odpowiedzi
+- [x] Test: Przeterminowane należności NIE wliczone do wpływów_30d
+- [x] Test: ING rolling pro-rata: 30/30 × kwota miesięczna
 
 **Weryfikacja:**
 - [ ] Weryfikacja: Formuła poprawnie kalkuluje cashflow
@@ -497,5 +497,5 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 | 1. Fundament | 1, 2, 3 | ✅ Implementacja ukończona |
 | 2. Ingestion | 4, 5, 6, 7 | ✅ Implementacja ukończona, awaiting review |
 | 3. Dashboard | 8, 9, 10, 11, 12 | ✅ Implementacja ukończona |
-| 4. AI | 13, 14 | - |
+| 4. AI | 13, 14 | ✅ Implementacja ukończona |
 | 5. Deploy | 15 | - |

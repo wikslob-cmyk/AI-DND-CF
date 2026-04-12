@@ -1,7 +1,7 @@
 # Dashboard finansowy — Kontekst techniczny
 
 Branch: `feature/dashboard-finansowy`
-Ostatnia aktualizacja: 2026-04-12 (Faza 3 ukończona)
+Ostatnia aktualizacja: 2026-04-12 (Faza 4 ukończona)
 
 ## Podmioty grupy
 
@@ -306,6 +306,45 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 3 ukończona)
 - Typecheck: czyste (backend + frontend)
 - Nowe testy: 5 monthly-input, 4 receivables, 2 payables, 3 liabilities, 2 forecast, 1 warehouse, 3 dashboard-summary = 20 nowych testow
 - E2E: 0/13 (wymaga infrastruktury)
+
+## Code Review Fazy 3 (2026-04-12)
+
+**Severity gate:** KONTYNUUJ Z ZASTRZEZENIAMI (0x P1, 6x P2, 8x P3)
+**Raport:** `docs/active/dashboard-finansowy/review-faza-3.md`
+
+### Kluczowe wnioski
+- **Brak P1 blocking** — implementacja jest solidna, brak krytycznych problemow
+- **Entity validation:** Brak walidacji entity query param we wszystkich 7 route modulach — nie powoduje SQL injection (parametrized queries), ale zwraca puste dane bez bledu 400
+- **SQL duplikacja:** receivables.ts i dashboard-summary.ts maja masywna duplikacje SQL (6 blokow, 90+ linii) — trudne w utrzymaniu
+- **Frontend testy:** 15 nowych komponentow bez jakichkolwiek testow — istotna luka w pokryciu
+- **Forecast:** Brak filtra entity — endpoint zwraca dane ze wszystkich podmiotow
+- **Root vitest:** Brak workspace config — uruchomienie z roota failuje 11 testow frontend
+- **Odchylenia od planu:** Minimalne — brak filtra entity w forecast to jedyne odchylenie
+- **Typecheck:** Czyste (backend + frontend)
+- **Testy:** 91 backend + 14 frontend, all passing per package
+- **E2E:** 0/13 (wymaga infrastruktury)
+
+## Faza 4: AI i projekcja (2026-04-12)
+
+### Zmiany
+- Unit 13: Viktor AI — @anthropic-ai/sdk z function calling (7 narzedzi), system prompt po polsku z kontekstem 5 podmiotow, model router (keyword heuristic: Sonnet 4.6 dla prognoza/ryzyko/cashflow, Haiku 4.5 dla reszty), cost logging per request, POST /api/viktor/chat z SSE streaming
+- Unit 14: Projekcja cashflow — formula: saldo_start + wplywy_30d - wyplywy_30d, wyplywy = raty harmonogramow + rolling ING pro-rata + zobowiazania handlowe + wynagrodzenia pro-rata + VAT (25. nastepnego miesiaca jesli w oknie), progi ryzyka (ok/warning/critical), GET /api/cashflow?days=30
+- Frontend: ViktorChat komponent z SSE streaming, MessageBubble, routing /dashboard/viktor
+- Dodano zaleznosc: @anthropic-ai/sdk
+
+### Decyzje techniczne
+- Narzedzia Viktora wolaja DB bezposrednio (nie HTTP endpoints) — unika dodatkowego overhead i auth
+- Function calling loop: max 5 round-tripow tool use
+- Model pricing hardcoded (Sonnet: $3/$15 per 1M tokens, Haiku: $0.25/$1.25)
+- VAT w cashflow: uwzgledniany tylko jesli 25. nastepnego miesiaca jest w oknie projekcji
+- Rolling ING pro-rata: (days/30) * monthly_total
+
+### Testy
+- Backend: 133 passed, 5 skipped (DB integration), 0 failed
+- Frontend: 29 passed, 0 failed
+- Typecheck: czyste (backend + frontend)
+- Nowe testy: 13 model-router, 10 tools (w tym system-prompt), 8 cashflow-projection = 31 nowych testow
+- E2E: 0/2 (wymaga infrastruktury)
 
 ## Zrodla
 - Requirements doc: `docs/dev-brainstorms/2026-04-11-dashboard-finansowy-requirements.md`

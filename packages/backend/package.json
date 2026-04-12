@@ -12,6 +12,7 @@
     "lint": "echo 'no linter configured yet'"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.88.0",
     "@dnd/shared": "workspace:*",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^10.0.2",

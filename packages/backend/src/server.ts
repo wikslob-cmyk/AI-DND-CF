@@ -13,6 +13,8 @@ import { registerLiabilitiesRoutes } from "./routes/liabilities.js";
 import { registerForecastRoutes } from "./routes/forecast.js";
 import { registerWarehouseRoutes } from "./routes/warehouse.js";
 import { registerDashboardSummaryRoutes } from "./routes/dashboard-summary.js";
+import { registerViktorRoutes } from "./routes/viktor.js";
+import { registerCashflowRoutes } from "./routes/cashflow.js";
 import { JWT_EXPIRY } from "./auth/constants.js";
 
 const PORT = Number(process.env.PORT) || 3001;
@@ -78,6 +80,8 @@ export async function buildApp() {
   await registerForecastRoutes(app);
   await registerWarehouseRoutes(app);
   await registerDashboardSummaryRoutes(app);
+  await registerViktorRoutes(app);
+  await registerCashflowRoutes(app);
 
   return app;
 }
