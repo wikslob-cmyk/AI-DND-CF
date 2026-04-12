@@ -226,6 +226,24 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 
 ---
 
+## Do poprawy po review fazy 2
+
+- [x] 🟠 [important] **packages/backend/src/import/routes.ts:12-32** — Stub DbAdapter w production routes zwraca false positive "success". Dodaj warning w response lub disable endpointow do czasu prawdziwego DB adapter
+- [x] 🟠 [important] **packages/backend/src/parsers/schedule-parser-excel.ts** — Plik 388 linii, podziel parsery per format do oddzielnych modulow
+- [x] 🟠 [important] **packages/backend/src/import/orchestrator.ts** — Plik 346 linii, podziel na saldeo-importer.ts, warehouse-importer.ts, schedule-importer.ts
+- [x] 🟠 [important] **packages/backend/src/parsers/schedule-parser-excel.ts:128,155** — Millennium parser uzywa `new Date()` jako paymentDate zamiast obliczonych dat z installmentNumber
+- [x] 🟠 [important] **packages/frontend/src/features/import/** — Brak testow dla 3 nowych komponentow (import-page, file-dropzone, import-status)
+- [x] 🟠 [important] **packages/backend/src/import/orchestrator.ts:178-193** — Rollback + insertImportLog moze rzucic niezlapany blad. Dodaj try-catch wokol rollback
+- [x] 🟠 [important] **packages/backend/src/services/nbp-rates.ts:141** — Empty catch block polyka blad bez logowania. Dodaj log przed fallbackiem
+- [ ] 🟡 [nit] **packages/backend/src/parsers/** — Duplikacja `toNumber()` w 3 plikach. Wyciagnij do `parsers/utils.ts`
+- [ ] 🟡 [nit] **packages/backend/src/parsers/** — Duplikacja `parseDate()` w 2 plikach. Scal w shared helper
+- [ ] 🟡 [nit] **packages/frontend/src/features/import/import-page.tsx:37-44** — Brak sprawdzenia `response.ok` przed `response.json()`
+- [ ] 🟡 [nit] **packages/frontend/src/features/import/import-status.tsx:53** — `key={file}` moze powodowac duplikaty
+- [ ] 🟡 [nit] **packages/backend/src/parsers/schedule-parser-pdf.ts:46-72** — parsePkoFormat identyczny z parseAliorFormat, mozna scalic
+- [ ] 🟡 [nit] **packages/backend/src/import/routes.ts:122-131** — GET /api/import/status stub bez komentarza TODO
+
+---
+
 ## Faza 3: Dashboard — widoki i formularz
 
 ### Unit 8: Layout dashboardu + nawigacja + R4 formularz [L]

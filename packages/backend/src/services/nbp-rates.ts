@@ -139,7 +139,11 @@ export async function fetchNbpRateWithFallback(
 
   try {
     return await fetchNbpRate(upperCurrency);
-  } catch {
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.warn(
+      `NBP API fetch failed for ${upperCurrency}: ${errorMessage}. Attempting fallback.`,
+    );
     const fallback = await fallbackProvider.getLastRate(upperCurrency);
     if (fallback) {
       return {
