@@ -5,12 +5,13 @@ import { EntityTabs } from "./entity-tabs";
 import { SummaryCards } from "./summary-cards";
 
 interface SummaryData {
-  receivables30d: number;
-  payables30d: number;
+  receivablesTotal: number;
+  overdueReceivables: number;
+  payablesTotal: number;
+  overduePayables: number;
   liabilities30d: number;
   bankBalance: number;
   warehouseValue: number;
-  overdueReceivables: number;
   lastImport: { importedAt: string; status: string } | null;
 }
 

@@ -9,12 +9,16 @@ export function formatCurrency(
   amount: number,
   currency: string = "PLN",
 ): string {
-  return new Intl.NumberFormat("pl-PL", {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  const abs = Math.abs(amount);
+  const sign = amount < 0 ? "-" : "";
+  const intPart = Math.floor(abs);
+  const decPart = Math.round((abs - intPart) * 100)
+    .toString()
+    .padStart(2, "0");
+  const formatted = intPart
+    .toString()
+    .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return `${sign}${formatted},${decPart} ${currency === "PLN" ? "zl" : currency}`;
 }
 
 export function formatDate(dateStr: string): string {

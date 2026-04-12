@@ -34,20 +34,27 @@ export async function registerDashboardSummaryRoutes(
       const currentYear = today.getFullYear();
       const currentMonth = today.getMonth() + 1;
 
-      // 1. Receivables total (next 30 days)
-      const receivables30d = await queryInvoiceTotalPln(
+      // 1. Receivables total (all unpaid = overdue + future)
+      const receivablesTotal = await queryInvoiceTotalPln(
         "FS",
         entity,
-        todayStr,
-        in30Str,
+        "1900-01-01",
+        "2099-12-31",
       );
 
-      // 2. Payables total (next 30 days)
-      const payables30d = await queryInvoiceTotalPln(
+      // 2. Payables total (all unpaid = overdue + future)
+      const payablesTotal = await queryInvoiceTotalPln(
+        "FZ",
+        entity,
+        "1900-01-01",
+        "2099-12-31",
+      );
+
+      // Overdue payables
+      const overduePayables = await queryOverdueTotalPln(
         "FZ",
         entity,
         todayStr,
-        in30Str,
       );
 
       // 3. Financial liabilities (next 30 days)
@@ -150,12 +157,13 @@ export async function registerDashboardSummaryRoutes(
       return reply.send({
         data: {
           entity,
-          receivables30d,
-          payables30d,
+          receivablesTotal,
+          overdueReceivables,
+          payablesTotal,
+          overduePayables,
           liabilities30d: liabilitiesTotal,
           bankBalance: Number(balanceRow?.total ?? 0),
           warehouseValue,
-          overdueReceivables,
           lastImport: importRow
             ? {
                 importedAt: importRow.imported_at,

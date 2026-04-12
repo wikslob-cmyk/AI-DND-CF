@@ -10,7 +10,7 @@ const MIGRATIONS_DIR = path.resolve(
 export async function runMigrations(sql: Sql): Promise<string[]> {
   await sql`
     CREATE TABLE IF NOT EXISTS _migrations (
-      id SERIAL PRIMARY KEY,
+      id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
       name VARCHAR(255) NOT NULL UNIQUE,
       applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )

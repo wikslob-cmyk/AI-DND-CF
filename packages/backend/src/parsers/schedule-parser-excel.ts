@@ -9,6 +9,7 @@ import { parseMillenniumFormat } from "./schedule-parser-millennium.js";
 import { parseSantanderFormat } from "./schedule-parser-santander.js";
 import { parseMercedesExcelFormat } from "./schedule-parser-mercedes.js";
 import { parseTdmFormat } from "./schedule-parser-tdm.js";
+import { parseLfrFormat } from "./schedule-parser-lfr.js";
 
 type ParserFn = (data: unknown[][], filename: string) => ParsedScheduleEntry[];
 
@@ -27,13 +28,7 @@ export function parseScheduleExcel(
   buffer: Buffer,
   filename: string,
 ): ParsedSchedule {
-  const parser = PARSER_MAP[filename];
-  if (!parser) {
-    throw new ScheduleParseError(
-      `No parser configured for Excel file: ${filename}`,
-      filename,
-    );
-  }
+  const parser = PARSER_MAP[filename] ?? tryAutoDetectParser;
 
   const workbook = XLSX.read(buffer, { type: "buffer" });
   const firstSheetName = workbook.SheetNames[0];
@@ -62,4 +57,36 @@ export function parseScheduleExcel(
   }
 
   return { sourceFile: filename, entries };
+}
+
+/**
+ * Try known parsers in order until one succeeds.
+ * Falls back to LFR format as it has a generic header-detection approach.
+ */
+function tryAutoDetectParser(
+  data: unknown[][],
+  filename: string,
+): ParsedScheduleEntry[] {
+  const parsers: ParserFn[] = [
+    parseLfrFormat,
+    parseMillenniumFormat,
+    parseEflFormat,
+    parseSantanderFormat,
+    parseMercedesExcelFormat,
+    parseTdmFormat,
+  ];
+
+  for (const parser of parsers) {
+    try {
+      const entries = parser(data, filename);
+      if (entries.length > 0) return entries;
+    } catch {
+      // try next parser
+    }
+  }
+
+  throw new ScheduleParseError(
+    `Nie udało się automatycznie rozpoznać formatu pliku: ${filename}`,
+    filename,
+  );
 }

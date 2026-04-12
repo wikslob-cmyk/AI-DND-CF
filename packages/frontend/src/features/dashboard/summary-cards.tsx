@@ -6,6 +6,8 @@ import { formatCurrency } from "@/lib/utils";
 interface SummaryCardProps {
   title: string;
   amount: number;
+  subtitle?: string;
+  subtitleAmount?: number;
   accent: string;
   navigateTo?: string;
 }
@@ -13,6 +15,8 @@ interface SummaryCardProps {
 function SummaryCard({
   title,
   amount,
+  subtitle,
+  subtitleAmount,
   accent,
   navigateTo,
 }: SummaryCardProps): ReactNode {
@@ -23,25 +27,31 @@ function SummaryCard({
       className={`cursor-pointer transition-shadow hover:shadow-md ${accent}`}
       onClick={() => navigateTo && navigate(navigateTo)}
     >
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-1">
         <CardTitle className="text-sm font-medium text-gray-500">
           {title}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <p className="text-2xl font-bold">{formatCurrency(amount)}</p>
+        {subtitle && subtitleAmount !== undefined && subtitleAmount > 0 && (
+          <p className="text-xs text-red-500 mt-1">
+            w tym przeterminowane: {formatCurrency(subtitleAmount)}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
 }
 
 interface SummaryData {
-  receivables30d: number;
-  payables30d: number;
+  receivablesTotal: number;
+  overdueReceivables: number;
+  payablesTotal: number;
+  overduePayables: number;
   liabilities30d: number;
   bankBalance: number;
   warehouseValue: number;
-  overdueReceivables: number;
   lastImport: { importedAt: string; status: string } | null;
 }
 
@@ -54,14 +64,18 @@ export function SummaryCards({ data }: SummaryCardsProps): ReactNode {
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <SummaryCard
-          title="Naleznosci (30 dni)"
-          amount={data.receivables30d}
+          title="Naleznosci"
+          amount={data.receivablesTotal}
+          subtitle="w tym przeterminowane"
+          subtitleAmount={data.overdueReceivables}
           accent="border-l-4 border-l-green-500"
           navigateTo="/dashboard/receivables"
         />
         <SummaryCard
-          title="Zobowiazania handlowe (30 dni)"
-          amount={data.payables30d}
+          title="Zobowiazania handlowe"
+          amount={data.payablesTotal}
+          subtitle="w tym przeterminowane"
+          subtitleAmount={data.overduePayables}
           accent="border-l-4 border-l-orange-500"
           navigateTo="/dashboard/payables"
         />
@@ -85,12 +99,6 @@ export function SummaryCards({ data }: SummaryCardsProps): ReactNode {
             navigateTo="/dashboard/warehouse"
           />
         )}
-        <SummaryCard
-          title="Przeterminowane naleznosci"
-          amount={data.overdueReceivables}
-          accent="border-l-4 border-l-yellow-500"
-          navigateTo="/dashboard/receivables"
-        />
       </div>
 
       {data.lastImport && (

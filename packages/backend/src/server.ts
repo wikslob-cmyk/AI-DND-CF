@@ -16,7 +16,10 @@ import { registerDashboardSummaryRoutes } from "./routes/dashboard-summary.js";
 import { registerViktorRoutes } from "./routes/viktor.js";
 import { registerCashflowRoutes } from "./routes/cashflow.js";
 import { JWT_EXPIRY } from "./auth/constants.js";
-import { checkConnection } from "./db/connection.js";
+import { checkConnection, sql } from "./db/connection.js";
+import { runMigrations } from "./db/migrate.js";
+import { seedEntities } from "./db/seed-entities.js";
+import { seedLiabilities } from "./db/seed-liabilities.js";
 
 const PORT = Number(process.env.PORT) || 3001;
 const HOST = process.env.HOST || "0.0.0.0";
@@ -83,21 +86,42 @@ export async function buildApp() {
   });
 
   await registerAuthRoutes(app);
-  await registerImportRoutes(app);
-  await registerMonthlyInputRoutes(app);
-  await registerReceivablesRoutes(app);
-  await registerPayablesRoutes(app);
-  await registerLiabilitiesRoutes(app);
-  await registerForecastRoutes(app);
-  await registerWarehouseRoutes(app);
-  await registerDashboardSummaryRoutes(app);
-  await registerViktorRoutes(app);
-  await registerCashflowRoutes(app);
+
+  // Encapsulate protected routes so their onRequest auth hooks
+  // don't leak into the auth routes above
+  await app.register(async (protectedScope) => {
+    await registerImportRoutes(protectedScope);
+    await registerMonthlyInputRoutes(protectedScope);
+    await registerReceivablesRoutes(protectedScope);
+    await registerPayablesRoutes(protectedScope);
+    await registerLiabilitiesRoutes(protectedScope);
+    await registerForecastRoutes(protectedScope);
+    await registerWarehouseRoutes(protectedScope);
+    await registerDashboardSummaryRoutes(protectedScope);
+    await registerViktorRoutes(protectedScope);
+    await registerCashflowRoutes(protectedScope);
+  });
 
   return app;
 }
 
+async function bootstrap(): Promise<void> {
+  const migrations = await runMigrations(sql);
+  if (migrations.length > 0) {
+    console.log(`Applied migrations: ${migrations.join(", ")}`);
+  }
+  await seedEntities(sql);
+  await seedLiabilities(sql);
+}
+
 async function start() {
+  try {
+    await bootstrap();
+  } catch (err) {
+    console.error("Database bootstrap failed:", err);
+    process.exit(1);
+  }
+
   const app = await buildApp();
 
   try {

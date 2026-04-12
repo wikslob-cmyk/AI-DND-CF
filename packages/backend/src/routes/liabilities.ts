@@ -33,53 +33,112 @@ export async function registerLiabilitiesRoutes(
 
       if (entity === "all" && type === "all") {
         rows = await sql`
-          SELECT * FROM liability ORDER BY entity_code, name
+          SELECT l.*, COALESCE(s.cnt, 0) AS schedule_count,
+                 COALESCE(s.remaining_capital, 0) AS remaining_capital,
+                 COALESCE(s.remaining_total, 0) AS remaining_total
+          FROM liability l
+          LEFT JOIN (
+            SELECT liability_id, COUNT(*) AS cnt,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+            FROM liability_schedule GROUP BY liability_id
+          ) s ON s.liability_id = l.id
+          ORDER BY l.entity_code, l.name
         `;
       } else if (entity === "all" && type === "info") {
         rows = await sql`
-          SELECT * FROM liability
-          WHERE status = 'informational'
-          ORDER BY entity_code, name
+          SELECT l.*, COALESCE(s.cnt, 0) AS schedule_count,
+                 COALESCE(s.remaining_capital, 0) AS remaining_capital,
+                 COALESCE(s.remaining_total, 0) AS remaining_total
+          FROM liability l
+          LEFT JOIN (
+            SELECT liability_id, COUNT(*) AS cnt,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+            FROM liability_schedule GROUP BY liability_id
+          ) s ON s.liability_id = l.id
+          WHERE l.status = 'informational'
+          ORDER BY l.entity_code, l.name
         `;
       } else if (entity === "all") {
         rows = await sql`
-          SELECT * FROM liability
-          WHERE type = ${type}
-          ORDER BY entity_code, name
+          SELECT l.*, COALESCE(s.cnt, 0) AS schedule_count,
+                 COALESCE(s.remaining_capital, 0) AS remaining_capital,
+                 COALESCE(s.remaining_total, 0) AS remaining_total
+          FROM liability l
+          LEFT JOIN (
+            SELECT liability_id, COUNT(*) AS cnt,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+            FROM liability_schedule GROUP BY liability_id
+          ) s ON s.liability_id = l.id
+          WHERE l.type = ${type}
+          ORDER BY l.entity_code, l.name
         `;
       } else if (type === "all") {
         rows = await sql`
-          SELECT * FROM liability
-          WHERE entity_code = ${entity}
-          ORDER BY name
+          SELECT l.*, COALESCE(s.cnt, 0) AS schedule_count,
+                 COALESCE(s.remaining_capital, 0) AS remaining_capital,
+                 COALESCE(s.remaining_total, 0) AS remaining_total
+          FROM liability l
+          LEFT JOIN (
+            SELECT liability_id, COUNT(*) AS cnt,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+            FROM liability_schedule GROUP BY liability_id
+          ) s ON s.liability_id = l.id
+          WHERE l.entity_code = ${entity}
+          ORDER BY l.name
         `;
       } else if (type === "info") {
         rows = await sql`
-          SELECT * FROM liability
-          WHERE entity_code = ${entity}
-            AND status = 'informational'
-          ORDER BY name
+          SELECT l.*, COALESCE(s.cnt, 0) AS schedule_count,
+                 COALESCE(s.remaining_capital, 0) AS remaining_capital,
+                 COALESCE(s.remaining_total, 0) AS remaining_total
+          FROM liability l
+          LEFT JOIN (
+            SELECT liability_id, COUNT(*) AS cnt,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+            FROM liability_schedule GROUP BY liability_id
+          ) s ON s.liability_id = l.id
+          WHERE l.entity_code = ${entity} AND l.status = 'informational'
+          ORDER BY l.name
         `;
       } else {
         rows = await sql`
-          SELECT * FROM liability
-          WHERE entity_code = ${entity}
-            AND type = ${type}
-          ORDER BY name
+          SELECT l.*, COALESCE(s.cnt, 0) AS schedule_count,
+                 COALESCE(s.remaining_capital, 0) AS remaining_capital,
+                 COALESCE(s.remaining_total, 0) AS remaining_total
+          FROM liability l
+          LEFT JOIN (
+            SELECT liability_id, COUNT(*) AS cnt,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+            FROM liability_schedule GROUP BY liability_id
+          ) s ON s.liability_id = l.id
+          WHERE l.entity_code = ${entity} AND l.type = ${type}
+          ORDER BY l.name
         `;
       }
 
-      const liabilities = rows.map((row) => ({
-        id: row.id,
-        entityCode: row.entity_code,
-        name: row.name,
-        type: row.type,
-        status: row.status,
-        originalAmount: Number(row.original_amount),
-        currentBalance: Number(row.current_balance),
-        sourceFile: row.source_file,
-        config: row.config,
-      }));
+      const liabilities = rows.map((row) => {
+        const type = row.type as string;
+        // Balance always from current_balance (set during import or manually)
+        const balance = Number(row.current_balance);
+
+        return {
+          id: row.id,
+          entityCode: row.entity_code,
+          name: row.name,
+          type,
+          status: row.status,
+          currentBalance: balance,
+          sourceFile: row.source_file,
+          config: typeof row.config === "string" ? JSON.parse(row.config) : (row.config ?? {}),
+          scheduleCount: Number(row.schedule_count),
+        };
+      });
 
       return reply.send({ data: { entity, type, liabilities } });
     },
@@ -97,10 +156,12 @@ export async function registerLiabilitiesRoutes(
       const months = Math.min(Number(request.query.months) || 12, 36);
 
       const today = new Date();
-      const endDate = new Date(today);
+      // Start from 1st of current month (show full current month)
+      const startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + months);
       const endDateStr = endDate.toISOString().split("T")[0] as string;
-      const todayStr = today.toISOString().split("T")[0] as string;
+      const startDateStr = startDate.toISOString().split("T")[0] as string;
 
       let rows;
 
@@ -118,7 +179,7 @@ export async function registerLiabilitiesRoutes(
             l.entity_code
           FROM liability_schedule ls
           JOIN liability l ON l.id = ls.liability_id
-          WHERE ls.payment_date >= ${todayStr}
+          WHERE ls.payment_date >= ${startDateStr}
             AND ls.payment_date < ${endDateStr}
             AND l.status = 'active'
           ORDER BY ls.payment_date, l.entity_code, l.name
@@ -138,7 +199,7 @@ export async function registerLiabilitiesRoutes(
           FROM liability_schedule ls
           JOIN liability l ON l.id = ls.liability_id
           WHERE l.entity_code = ${entity}
-            AND ls.payment_date >= ${todayStr}
+            AND ls.payment_date >= ${startDateStr}
             AND ls.payment_date < ${endDateStr}
             AND l.status = 'active'
           ORDER BY ls.payment_date, l.name
@@ -220,7 +281,7 @@ export async function registerLiabilitiesRoutes(
         const monthlyTotal = monthlyCapital + monthlyInterest;
 
         for (let m = 0; m < months; m++) {
-          const date = new Date(today);
+          const date = new Date(startDate);
           date.setMonth(date.getMonth() + m);
           const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 

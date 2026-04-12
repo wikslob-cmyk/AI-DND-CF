@@ -161,8 +161,33 @@ export function parseSaldeoFile(
     const contractorName = String(row[col("Kontrahent")] ?? "").trim();
     const contractorNip = normalizeNip(String(row[col("NIP")] ?? ""));
     const currency = String(row[col("Waluta")] ?? "PLN").trim() || "PLN";
-    const grossValue = toNumber(row[col("Wartość brutto")]);
+    let grossValue = toNumber(row[col("Wartość brutto")]);
     const partialPayments = toNumber(row[col("Suma płatności częściowych")]);
+
+    // If gross value is 0, calculate from VAT breakdown columns
+    if (grossValue === 0) {
+      const vatColumns = [
+        "Wartość netto 23%", "VAT 23%",
+        "Wartość netto 8%", "VAT 8%",
+        "Wartość netto 7%", "VAT 7%",
+        "Wartość netto 5%", "VAT 5%",
+        "Wartość netto 0%", "VAT 0%",
+        "Wartość netto zw.", "VAT zw.",
+        "Wartość netto np.", "VAT np.",
+        "Wartość bez VAT",
+      ];
+      for (const vc of vatColumns) {
+        const idx = headerMap.get(vc);
+        if (idx !== undefined) {
+          grossValue += toNumber(row[idx]);
+        }
+      }
+    }
+
+    // If remaining is 0 for unpaid invoices, use grossValue - partialPayments
+    const finalRemaining = remainingAmount > 0
+      ? remainingAmount
+      : Math.max(0, grossValue - partialPayments);
 
     results.push({
       entityCode,
@@ -173,7 +198,7 @@ export function parseSaldeoFile(
       paymentDue,
       currency,
       grossValue,
-      remainingAmount,
+      remainingAmount: finalRemaining,
       partialPayments,
       grossValuePln: currency === "PLN" ? grossValue : 0,
     });

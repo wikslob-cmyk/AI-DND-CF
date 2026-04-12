@@ -16,7 +16,7 @@ const LIABILITIES: LiabilitySeed[] = [
   {
     entity_code: "cgesp",
     name: "Millennium Leasing - piec",
-    type: "leasing",
+    type: "leasing_financial",
     status: "active",
     original_amount: 0,
     current_balance: 0,
@@ -46,7 +46,7 @@ const LIABILITIES: LiabilitySeed[] = [
   {
     entity_code: "cgesp",
     name: "EFL - linia",
-    type: "leasing",
+    type: "leasing_financial",
     status: "active",
     original_amount: 0,
     current_balance: 0,
@@ -56,7 +56,7 @@ const LIABILITIES: LiabilitySeed[] = [
   {
     entity_code: "cgesp",
     name: "EFL - piec 1",
-    type: "leasing",
+    type: "leasing_financial",
     status: "active",
     original_amount: 0,
     current_balance: 0,
@@ -66,7 +66,7 @@ const LIABILITIES: LiabilitySeed[] = [
   {
     entity_code: "cgesp",
     name: "EFL - piec 2",
-    type: "leasing",
+    type: "leasing_financial",
     status: "active",
     original_amount: 0,
     current_balance: 0,
@@ -88,7 +88,7 @@ const LIABILITIES: LiabilitySeed[] = [
   {
     entity_code: "dngro",
     name: "Santander - Volvo",
-    type: "leasing",
+    type: "leasing_financial",
     status: "active",
     original_amount: 0,
     current_balance: 0,
@@ -98,7 +98,7 @@ const LIABILITIES: LiabilitySeed[] = [
   {
     entity_code: "dngro",
     name: "Mercedes S-klasa",
-    type: "leasing",
+    type: "leasing_financial",
     status: "active",
     original_amount: 0,
     current_balance: 0,
@@ -108,7 +108,7 @@ const LIABILITIES: LiabilitySeed[] = [
   {
     entity_code: "dngro",
     name: "LFR",
-    type: "leasing",
+    type: "leasing_financial",
     status: "active",
     original_amount: 0,
     current_balance: 0,
@@ -118,7 +118,7 @@ const LIABILITIES: LiabilitySeed[] = [
   {
     entity_code: "dngro",
     name: "PKO Leasing",
-    type: "leasing",
+    type: "leasing_financial",
     status: "active",
     original_amount: 0,
     current_balance: 0,
@@ -150,7 +150,7 @@ const LIABILITIES: LiabilitySeed[] = [
   {
     entity_code: "dndsp",
     name: "Mercedes Leasing",
-    type: "leasing",
+    type: "leasing_financial",
     status: "active",
     original_amount: 0,
     current_balance: 0,
@@ -162,7 +162,7 @@ const LIABILITIES: LiabilitySeed[] = [
   {
     entity_code: "tdmsp",
     name: "Millennium - zgrzewarka",
-    type: "leasing",
+    type: "leasing_financial",
     status: "active",
     original_amount: 0,
     current_balance: 0,
@@ -219,7 +219,8 @@ export async function seedLiabilities(sql: Sql): Promise<number> {
         ${liability.source_file},
         ${JSON.stringify(liability.config)}
       )
-      ON CONFLICT DO NOTHING
+      ON CONFLICT (entity_code, name) DO UPDATE SET
+        source_file = COALESCE(liability.source_file, EXCLUDED.source_file)
     `;
     inserted += result.count;
   }
