@@ -506,6 +506,20 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 5 ukończona)
 
 ---
 
+## Do poprawy po review fazy 5
+
+- [x] 🟠 [important] **packages/backend/src/db/connection.ts:3-5** — DATABASE_URL ma hardcoded fallback do localhost. Usun fallback, rzuc Error gdy brak env var (analogicznie do getJwtSecret()).
+- [x] 🟠 [important] **packages/backend/Dockerfile:3, packages/frontend/Dockerfile:3** — `pnpm@latest` w Dockerfile = niedeterministyczny build. Przypnij do konkretnej wersji (np. pnpm@9.15.4).
+- [x] 🟠 [important] **docker-compose.prod.yml:22-23** — Backend port 3001 wystawiony publicznie (`ports`). Zmien na `expose: ["3001"]` aby ruch szedl tylko przez nginx.
+- [x] 🟠 [important] **packages/backend/src/server.ts:71-83** — Brak testu /api/health (200 ok + 503 degraded). Dodaj health.test.ts z mockiem checkConnection.
+- [ ] 🟡 [nit] **packages/frontend/nginx.conf:17-19** — Brak Content-Security-Policy header. Dodaj bazowy CSP.
+- [ ] 🟡 [nit] **packages/frontend/nginx.conf:17-19** — Brak X-XSS-Protection header (ustaw na "0").
+- [ ] 🟡 [nit] **packages/frontend/nginx.conf:22-26** — Static assets location nadpisuje security headers (nginx add_header behavior). Dodaj security headers rowniez w location block.
+- [ ] 🟡 [nit] **.dockerignore** — Brak wykluczenia plikow testowych (*.test.ts, vitest.config.ts). Niepotrzebnie kopiowane do builder stage.
+- [ ] 🟡 [nit] **docker-compose.prod.yml:35** — start_period: 10s moze byc za krotki przy cold start + DB connection. Rozważ 30s.
+
+---
+
 ## Podsumowanie postępu
 
 | Faza | Unity | Status |

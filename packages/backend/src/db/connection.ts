@@ -1,8 +1,14 @@
 import postgres from "postgres";
 
-const DATABASE_URL =
-  process.env.DATABASE_URL ||
-  "postgres://dashboard:dashboard@localhost:5432/dashboard";
+function getDatabaseUrl(): string {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL environment variable is required");
+  }
+  return url;
+}
+
+const DATABASE_URL = getDatabaseUrl();
 
 export const sql = postgres(DATABASE_URL, {
   max: 10,

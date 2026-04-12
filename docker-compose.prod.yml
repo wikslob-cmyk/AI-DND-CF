@@ -19,8 +19,8 @@ services:
       dockerfile: packages/backend/Dockerfile
     container_name: dashboard-backend
     restart: unless-stopped
-    ports:
-      - "3001:3001"
+    expose:
+      - "3001"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}
