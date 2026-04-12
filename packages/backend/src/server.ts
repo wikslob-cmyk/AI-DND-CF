@@ -3,7 +3,9 @@ import cors from "@fastify/cors";
 import cookie from "@fastify/cookie";
 import jwt from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
+import multipart from "@fastify/multipart";
 import { registerAuthRoutes } from "./auth/login.js";
+import { registerImportRoutes } from "./import/routes.js";
 import { JWT_EXPIRY } from "./auth/constants.js";
 
 const PORT = Number(process.env.PORT) || 3001;
@@ -44,6 +46,13 @@ export async function buildApp() {
 
   await app.register(cookie);
 
+  await app.register(multipart, {
+    limits: {
+      fileSize: 50 * 1024 * 1024, // 50MB
+      files: 14,
+    },
+  });
+
   await app.register(jwt, {
     secret: getJwtSecret(),
     sign: { expiresIn: JWT_EXPIRY },
@@ -54,6 +63,7 @@ export async function buildApp() {
   });
 
   await registerAuthRoutes(app);
+  await registerImportRoutes(app);
 
   return app;
 }
