@@ -1,7 +1,7 @@
 # Dashboard finansowy — Zadania
 
 Branch: `feature/dashboard-finansowy`
-Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
+Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 
 ---
 
@@ -111,25 +111,25 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
 ### Unit 4: Parser plików Saldeo (Excel) [L]
 
 **Implementacja:**
-- [ ] Stwórz `packages/backend/src/parsers/types.ts` (ParsedInvoice interface, ValidationError)
-- [ ] Stwórz `packages/backend/src/parsers/nip-normalizer.ts` (usuwanie spacji, myślników, "PL", walidacja 10 cyfr)
-- [ ] Stwórz `packages/backend/src/parsers/saldeo-parser.ts`:
+- [x] Stwórz `packages/backend/src/parsers/types.ts` (ParsedInvoice interface, ValidationError)
+- [x] Stwórz `packages/backend/src/parsers/nip-normalizer.ts` (usuwanie spacji, myślników, "PL", walidacja 10 cyfr)
+- [x] Stwórz `packages/backend/src/parsers/saldeo-parser.ts`:
   - Walidacja nagłówków wiersz 3, wymagane kolumny
   - Filtr regex `^[A-Z]+_FS_$` (należności) i `^[A-Z]+_FZ_$` (zobowiązania)
   - Kwota z `Pozostało do zapłaty`, nie `Wartość brutto`
   - Entity code z nazwy pliku
-- [ ] Stwórz `packages/backend/src/parsers/__tests__/saldeo-parser.test.ts`
-- [ ] Stwórz `packages/backend/src/parsers/__tests__/nip-normalizer.test.ts`
+- [x] Stwórz `packages/backend/src/parsers/__tests__/saldeo-parser.test.ts`
+- [x] Stwórz `packages/backend/src/parsers/__tests__/nip-normalizer.test.ts`
 
 **Testy:**
-- [ ] Test: Parsowanie `lista-dokumentow-cgesp.xlsx` → poprawna lista należności i zobowiązań
-- [ ] Test: Filtr `_FS_` nie łapie `_FS_PF_` ani `_FS_KOR_`
-- [ ] Test: Filtr `_FZ_` łapie tylko exact `_FZ_`
-- [ ] Test: Plik z brakującą kolumną → ValidationError z nazwą brakującej kolumny
-- [ ] Test: NIP z myślnikami "123-456-78-90" → "1234567890"
-- [ ] Test: NIP z prefixem "PL" → usunięty
-- [ ] Test: Faktura z `Zapłacono = TAK` → wykluczona
-- [ ] Test: Faktura z `Remaining = 0` i `Zapłacono = NIE` → dołączona (edge case)
+- [x] Test: Parsowanie `lista-dokumentow-cgesp.xlsx` → poprawna lista należności i zobowiązań
+- [x] Test: Filtr `_FS_` nie łapie `_FS_PF_` ani `_FS_KOR_`
+- [x] Test: Filtr `_FZ_` łapie tylko exact `_FZ_`
+- [x] Test: Plik z brakującą kolumną → ValidationError z nazwą brakującej kolumny
+- [x] Test: NIP z myślnikami "123-456-78-90" → "1234567890"
+- [x] Test: NIP z prefixem "PL" → usunięty
+- [x] Test: Faktura z `Zapłacono = TAK` → wykluczona
+- [x] Test: Faktura z `Remaining = 0` i `Zapłacono = NIE` → dołączona (edge case)
 
 **Weryfikacja:**
 - [ ] Weryfikacja: Parser poprawnie przetwarza wszystkie 5 plików z `zasoby/`
@@ -140,23 +140,23 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
 ### Unit 5: Parser harmonogramów (Excel + PDF) [XL]
 
 **Implementacja:**
-- [ ] Stwórz `packages/backend/src/parsers/schedule-types.ts` (ParsedScheduleEntry, ScheduleParseError)
-- [ ] Stwórz `packages/backend/src/parsers/schedule-parser-excel.ts`:
+- [x] Stwórz `packages/backend/src/parsers/schedule-types.ts` (ParsedScheduleEntry, ScheduleParseError)
+- [x] Stwórz `packages/backend/src/parsers/schedule-parser-excel.ts`:
   - Parser per format/plik harmonogramu Excel
   - Mapowanie: tabela_rat_wynagrodzenia, tabela_rat_364944, harmonogram_splat_EFL_*, harmonogram_santander_*, Harmonogram_platnosci-dndgr-mercedes, TDM-leas
-- [ ] Stwórz `packages/backend/src/parsers/schedule-parser-pdf.ts`:
+- [x] Stwórz `packages/backend/src/parsers/schedule-parser-pdf.ts`:
   - Parser czytelnych PDF: Harmonogram.pdf (Alior), Harmonogram spłat_nr umowy 01450_PI_24.pdf (PKO), DNDspzoo-leasing.pdf
   - LFR.pdf → ScheduleParseError("Skan PDF, wymaga ręcznego wpisu")
-- [ ] Stwórz `packages/backend/src/parsers/__tests__/schedule-parser.test.ts`
+- [x] Stwórz `packages/backend/src/parsers/__tests__/schedule-parser.test.ts`
 
 **Notatka:** Zacznij od jednego pliku Excel (tabela_rat_364944.xlsx) jako wzorca, potem rozszerz.
 
 **Testy:**
-- [ ] Test: Parsowanie `tabela_rat_364944.xlsx` → lista rat z datami, kapitałem, odsetkami
-- [ ] Test: Parsowanie `Harmonogram.pdf` (Alior) → lista rat
-- [ ] Test: `LFR.pdf` → rzuca ScheduleParseError("Skan PDF, wymaga ręcznego wpisu")
-- [ ] Test: Parsowanie pliku z brakującymi kolumnami → ValidationError
-- [ ] Test: Sumy rat per harmonogram zgadzają się z kwotą kredytu
+- [x] Test: Parsowanie `tabela_rat_364944.xlsx` → lista rat z datami, kapitałem, odsetkami
+- [x] Test: Parsowanie `Harmonogram.pdf` (Alior) → lista rat
+- [x] Test: `LFR.pdf` → rzuca ScheduleParseError("Skan PDF, wymaga ręcznego wpisu")
+- [x] Test: Parsowanie pliku z brakującymi kolumnami → ValidationError
+- [x] Test: Sumy rat per harmonogram zgadzają się z kwotą kredytu
 
 **Weryfikacja:**
 - [ ] Weryfikacja: Parsery przetwarzają wszystkie pliki z `zasoby/zaobowiazania/` (oprócz LFR.pdf)
@@ -167,25 +167,25 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
 ### Unit 6: Parser magazynu + integracja NBP API [M]
 
 **Implementacja:**
-- [ ] Stwórz `packages/backend/src/parsers/warehouse-parser.ts`:
+- [x] Stwórz `packages/backend/src/parsers/warehouse-parser.ts`:
   - Nagłówki wielopoziomowe (wiersz 1-2)
   - Kolumny 9-11 (ilości), 15-17 (wartości), Cena (sprzedaży), Artykuł
   - Sumowanie komponent + gotowe per artykuł
   - Ignorowanie kolumny M (cena zakupu)
-- [ ] Stwórz `packages/backend/src/services/nbp-rates.ts`:
+- [x] Stwórz `packages/backend/src/services/nbp-rates.ts`:
   - Fetch z `https://api.nbp.pl/api/exchangerates/rates/a/{currency}/?format=json`
   - Retry 3 × 2s backoff
   - Fallback: ostatni kurs z DB + warning
   - PLN → rate 1.0, nieznana waluta → error
-- [ ] Stwórz `packages/backend/src/parsers/__tests__/warehouse-parser.test.ts`
-- [ ] Stwórz `packages/backend/src/services/__tests__/nbp-rates.test.ts`
+- [x] Stwórz `packages/backend/src/parsers/__tests__/warehouse-parser.test.ts`
+- [x] Stwórz `packages/backend/src/services/__tests__/nbp-rates.test.ts`
 
 **Testy:**
-- [ ] Test: Parsowanie `Zestawienie magazynowe DND 10.04.26.xlsx` → lista artykułów z ilościami i wartościami
-- [ ] Test: Wartość per artykuł = ilość_total × cena_sprzedaży
-- [ ] Test: NBP API zwraca kurs EUR → zapis do DB
-- [ ] Test: NBP API niedostępne → fallback na ostatni kurs + warning
-- [ ] Test: Nieznana waluta (np. CHF) → error z opisem
+- [x] Test: Parsowanie `Zestawienie magazynowe DND 10.04.26.xlsx` → lista artykułów z ilościami i wartościami
+- [x] Test: Wartość per artykuł = ilość_total × cena_sprzedaży
+- [x] Test: NBP API zwraca kurs EUR → zapis do DB
+- [x] Test: NBP API niedostępne → fallback na ostatni kurs + warning
+- [x] Test: Nieznana waluta (np. CHF) → error z opisem
 
 **Weryfikacja:**
 - [ ] Weryfikacja: Parser poprawnie czyta wielopoziomowe nagłówki
@@ -197,26 +197,26 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
 ### Unit 7: Orkiestrator importu (backend + UI upload) [L]
 
 **Implementacja:**
-- [ ] Stwórz `packages/backend/src/import/orchestrator.ts`:
+- [x] Stwórz `packages/backend/src/import/orchestrator.ts`:
   - Waliduj strukturę wszystkich plików → fail fast
   - Pobierz kursy NBP (jeśli faktury walutowe)
   - BEGIN transaction → DELETE stare → INSERT nowe → COMMIT/ROLLBACK
   - INSERT import_log z details
-- [ ] Stwórz `packages/backend/src/import/routes.ts`:
+- [x] Stwórz `packages/backend/src/import/routes.ts`:
   - POST /api/import/saldeo (multipart 5 plików)
   - POST /api/import/warehouse (multipart 1 plik)
   - POST /api/import/schedules (multipart harmonogramy)
   - GET /api/import/status
-- [ ] Stwórz `packages/frontend/src/features/import/import-page.tsx`
-- [ ] Stwórz `packages/frontend/src/features/import/file-dropzone.tsx` (drag-n-drop, walidacja typu)
-- [ ] Stwórz `packages/frontend/src/features/import/import-status.tsx` (ostatni import: data, status, warnings)
-- [ ] Stwórz `packages/backend/src/import/__tests__/orchestrator.test.ts`
+- [x] Stwórz `packages/frontend/src/features/import/import-page.tsx`
+- [x] Stwórz `packages/frontend/src/features/import/file-dropzone.tsx` (drag-n-drop, walidacja typu)
+- [x] Stwórz `packages/frontend/src/features/import/import-status.tsx` (ostatni import: data, status, warnings)
+- [x] Stwórz `packages/backend/src/import/__tests__/orchestrator.test.ts`
 
 **Testy:**
-- [ ] Test: Import 5 poprawnych plików → dane w DB, import_log status=success
-- [ ] Test: Import z 1 uszkodzonym plikiem → rollback, żadne dane nie zmienione, import_log status=failed
-- [ ] Test: Import nadpisuje poprzedni snapshot (stare invoice usunięte)
-- [ ] Test: Import z fakturami EUR → kurs NBP pobrany i zapisany
+- [x] Test: Import 5 poprawnych plików → dane w DB, import_log status=success
+- [x] Test: Import z 1 uszkodzonym plikiem → rollback, żadne dane nie zmienione, import_log status=failed
+- [x] Test: Import nadpisuje poprzedni snapshot (stare invoice usunięte)
+- [x] Test: Import z fakturami EUR → kurs NBP pobrany i zapisany
 - [ ] Test: [E2E] Przeciągnij 5 plików → dropzone → kliknij "Importuj" → spinner → "Import zakończony" z datą
 - [ ] Test: [E2E] Upload pliku z błędną strukturą → komunikat błędu z opisem problemu
 
@@ -460,8 +460,8 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
 
 | Faza | Unity | Status |
 |---|---|---|
-| 1. Fundament | 1, 2, 3 | ✅ Implementacja ukończona, awaiting review |
-| 2. Ingestion | 4, 5, 6, 7 | - |
+| 1. Fundament | 1, 2, 3 | ✅ Implementacja ukończona |
+| 2. Ingestion | 4, 5, 6, 7 | ✅ Implementacja ukończona, awaiting review |
 | 3. Dashboard | 8, 9, 10, 11, 12 | - |
 | 4. AI | 13, 14 | - |
 | 5. Deploy | 15 | - |

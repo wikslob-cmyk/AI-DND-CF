@@ -1,7 +1,7 @@
 # Dashboard finansowy — Kontekst techniczny
 
 Branch: `feature/dashboard-finansowy`
-Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
+Ostatnia aktualizacja: 2026-04-12 (Faza 2 ukończona)
 
 ## Podmioty grupy
 
@@ -206,6 +206,68 @@ Ostatnia aktualizacja: 2026-04-12 (Faza 1 ukończona)
 - E2E login test deferred (requires running frontend + backend)
 - cross-env added to root for Windows compatibility
 
-## Źródła
+## Code Review Fazy 1 (2026-04-12)
+
+**Severity gate:** KONTYNUUJ Z ZASTRZEZENIAMI (1x P1, 6x P2, 5x P3)
+**Raport:** `docs/active/dashboard-finansowy/review-faza-1.md`
+
+### Kluczowe wnioski
+- **P1 blocking:** JWT_SECRET ma hardcoded fallback -- musi byc naprawiony przed produkcja
+- **Security:** Brak rate limiting i body validation na login, CORS open -- 3x P2
+- **Observability:** pino-pretty w produkcji + brak w dependencies -- 2x P2
+- **Testing:** Brak testow frontend (akceptowalne w scaffold, ale do dodania)
+- **Odchylenia od planu:** Brak -- implementacja zgodna z planem technicznym
+- **E2E:** 0/7 weryfikacji zrealizowanych (wymagaja infrastruktury)
+- **Typecheck:** Czyste (backend + frontend)
+- **Testy:** 18 passed, 5 skipped (DB integration), 0 failed
+
+## Re-Review Fazy 1 po cyklu fix (2026-04-12)
+
+**Severity gate:** KONTYNUUJ Z ZASTRZEZENIAMI (0x P1, 1x P2, 5x P3)
+**Raport:** `docs/active/dashboard-finansowy/review-faza-1.md`
+
+### Weryfikacja napraw
+- Wszystkie 7 napraw (1x P1 + 6x P2) zweryfikowane jako poprawne
+- JWT_SECRET: rzuca Error bez fallbacku
+- CORS: restrykcyjne (env var lub localhost)
+- Body validation: JSON Schema z required/minLength/additionalProperties
+- Rate limiting: 5 prob/min na login endpoint
+- pino-pretty: warunkowe (dev only), w devDependencies
+- Frontend test: 2 testy renderowania App
+
+### Nowy finding
+- P2: Brak testow dla nowych mechanizmow (body validation 400, rate limit 429, JWT_SECRET throw)
+
+### Testy po fixie
+- Backend: 18 passed, 5 skipped, 0 failed
+- Frontend: 2 passed, 0 failed
+- Typecheck: czyste (backend + frontend)
+- E2E: 0/7 (wymaga infrastruktury)
+
+## Faza 2: Pipeline ingestion (2026-04-12)
+
+### Zmiany
+- Unit 4: Parser Saldeo — parsowanie 5 plików xlsx, regex `^[A-Z]+_FS_$` / `^[A-Z]+_FZ_$`, NIP normalization, 48-kolumnowa walidacja
+- Unit 5: Parser harmonogramów — 8 parserów Excel (Millennium, EFL, Santander, Mercedes, TDM) + 3 parsery PDF (Alior, PKO, Mercedes). LFR.pdf i Harmonogram platnosci nowy = skany, rejected
+- Unit 6: Parser magazynu — wielopoziomowe nagłówki, kolumny ilości/wartości, ekstrakcja kursu EUR. Serwis NBP z retry 3x + fallback z DB
+- Unit 7: Orkiestrator importu — transakcyjny (parse-all then write), fail-fast, snapshot replacement. Multipart upload routes. Frontend dropzone UI
+- Dodano zależności: xlsx (SheetJS), pdf-parse@1.1.1
+- Usunięto rootDir z backend tsconfig (fix dla monorepo path alias @dnd/shared)
+- Zarejestrowano @fastify/multipart w server.ts
+
+### Decyzje techniczne
+- pdf-parse v1.1.1 (nie v2) — prostsza API, lepsze CJS compat
+- pdf-parse wymaga dummy test fixture (test/data/05-versions-space.pdf) at import time
+- NBP retry delay zmniejszony w testach (VITEST env var detection)
+- DbAdapter interface w orchestrator — pozwala na mockowanie w testach, prawdziwa implementacja będzie w Fazie 3
+- Import routes używają stub DbAdapter — będzie podłączony do prawdziwej DB gdy endpointy zostaną zintegrowane z routerem
+
+### Testy
+- Backend: 71 passed, 5 skipped (DB integration), 0 failed
+- Frontend: 2 passed, 0 failed
+- Typecheck: czyste (backend + frontend)
+- Nowe testy: 13 NIP, 8 Saldeo, 10 schedule, 5 warehouse, 7 NBP, 6 orchestrator
+
+## Zrodla
 - Requirements doc: `docs/dev-brainstorms/2026-04-11-dashboard-finansowy-requirements.md`
 - Plan techniczny: `docs/plans/2026-04-12-001-feat-dashboard-finansowy-plan.md`
