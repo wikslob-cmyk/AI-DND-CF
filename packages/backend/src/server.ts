@@ -6,6 +6,13 @@ import rateLimit from "@fastify/rate-limit";
 import multipart from "@fastify/multipart";
 import { registerAuthRoutes } from "./auth/login.js";
 import { registerImportRoutes } from "./import/routes.js";
+import { registerMonthlyInputRoutes } from "./routes/monthly-input.js";
+import { registerReceivablesRoutes } from "./routes/receivables.js";
+import { registerPayablesRoutes } from "./routes/payables.js";
+import { registerLiabilitiesRoutes } from "./routes/liabilities.js";
+import { registerForecastRoutes } from "./routes/forecast.js";
+import { registerWarehouseRoutes } from "./routes/warehouse.js";
+import { registerDashboardSummaryRoutes } from "./routes/dashboard-summary.js";
 import { JWT_EXPIRY } from "./auth/constants.js";
 
 const PORT = Number(process.env.PORT) || 3001;
@@ -64,6 +71,13 @@ export async function buildApp() {
 
   await registerAuthRoutes(app);
   await registerImportRoutes(app);
+  await registerMonthlyInputRoutes(app);
+  await registerReceivablesRoutes(app);
+  await registerPayablesRoutes(app);
+  await registerLiabilitiesRoutes(app);
+  await registerForecastRoutes(app);
+  await registerWarehouseRoutes(app);
+  await registerDashboardSummaryRoutes(app);
 
   return app;
 }
