@@ -39,8 +39,8 @@ export async function registerLiabilitiesRoutes(
           FROM liability l
           LEFT JOIN (
             SELECT liability_id, COUNT(*) AS cnt,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN total ELSE 0 END) AS remaining_total
             FROM liability_schedule GROUP BY liability_id
           ) s ON s.liability_id = l.id
           ORDER BY l.entity_code, l.name
@@ -53,8 +53,8 @@ export async function registerLiabilitiesRoutes(
           FROM liability l
           LEFT JOIN (
             SELECT liability_id, COUNT(*) AS cnt,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN total ELSE 0 END) AS remaining_total
             FROM liability_schedule GROUP BY liability_id
           ) s ON s.liability_id = l.id
           WHERE l.status = 'informational'
@@ -68,8 +68,8 @@ export async function registerLiabilitiesRoutes(
           FROM liability l
           LEFT JOIN (
             SELECT liability_id, COUNT(*) AS cnt,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN total ELSE 0 END) AS remaining_total
             FROM liability_schedule GROUP BY liability_id
           ) s ON s.liability_id = l.id
           WHERE l.type = ${type}
@@ -83,8 +83,8 @@ export async function registerLiabilitiesRoutes(
           FROM liability l
           LEFT JOIN (
             SELECT liability_id, COUNT(*) AS cnt,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN total ELSE 0 END) AS remaining_total
             FROM liability_schedule GROUP BY liability_id
           ) s ON s.liability_id = l.id
           WHERE l.entity_code = ${entity}
@@ -98,8 +98,8 @@ export async function registerLiabilitiesRoutes(
           FROM liability l
           LEFT JOIN (
             SELECT liability_id, COUNT(*) AS cnt,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN total ELSE 0 END) AS remaining_total
             FROM liability_schedule GROUP BY liability_id
           ) s ON s.liability_id = l.id
           WHERE l.entity_code = ${entity} AND l.status = 'informational'
@@ -113,8 +113,8 @@ export async function registerLiabilitiesRoutes(
           FROM liability l
           LEFT JOIN (
             SELECT liability_id, COUNT(*) AS cnt,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN capital ELSE 0 END) AS remaining_capital,
-                   SUM(CASE WHEN payment_date >= CURRENT_DATE THEN total ELSE 0 END) AS remaining_total
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN capital ELSE 0 END) AS remaining_capital,
+                   SUM(CASE WHEN payment_date >= DATE_TRUNC('month', CURRENT_DATE) THEN total ELSE 0 END) AS remaining_total
             FROM liability_schedule GROUP BY liability_id
           ) s ON s.liability_id = l.id
           WHERE l.entity_code = ${entity} AND l.type = ${type}
@@ -124,8 +124,10 @@ export async function registerLiabilitiesRoutes(
 
       const liabilities = rows.map((row) => {
         const type = row.type as string;
-        // Balance always from current_balance (set during import or manually)
-        const balance = Number(row.current_balance);
+        // Balance from schedule (remaining total from 1st of month), fallback to current_balance
+        const scheduleBalance = Number(row.remaining_total);
+        const manualBalance = Number(row.current_balance);
+        const balance = scheduleBalance > 0 ? scheduleBalance : manualBalance;
 
         return {
           id: row.id,
