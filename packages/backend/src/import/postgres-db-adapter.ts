@@ -87,7 +87,9 @@ function buildAdapter(conn: Sql): DbAdapter {
         VALUES (${status}, ${JSON.stringify(details)})
         RETURNING id
       `;
-      return result[0].id as number;
+      const row = result[0];
+      if (!row) throw new Error("INSERT import_log returned no rows");
+      return row.id as number;
     },
 
     async deleteScheduleEntries(liabilityId: number): Promise<void> {
@@ -123,7 +125,8 @@ function buildAdapter(conn: Sql): DbAdapter {
         WHERE entity_code = ${entityCode} AND name = ${liabilityName}
         LIMIT 1
       `;
-      return result.length > 0 ? (result[0].id as number) : null;
+      const row = result[0];
+      return row ? (row.id as number) : null;
     },
   };
 }
@@ -194,7 +197,9 @@ export async function runScheduleImportWithMapping(
         VALUES (${entityCode}, ${name}, ${type}, 'active', 0, 0, ${file.filename}, '{}')
         RETURNING id
       `;
-      resolvedMapping[file.filename] = result[0].id as number;
+      const row = result[0];
+      if (!row) throw new Error(`INSERT liability returned no rows for ${file.filename}`);
+      resolvedMapping[file.filename] = row.id as number;
     }
   }
 
@@ -286,10 +291,11 @@ export function createFallbackRateProvider(sql: Sql): FallbackRateProvider {
         ORDER BY rate_date DESC
         LIMIT 1
       `;
-      if (result.length === 0) return null;
+      const row = result[0];
+      if (!row) return null;
       return {
-        ratePln: Number(result[0].rate_pln),
-        rateDate: String(result[0].rate_date),
+        ratePln: Number(row.rate_pln),
+        rateDate: String(row.rate_date),
       };
     },
   };

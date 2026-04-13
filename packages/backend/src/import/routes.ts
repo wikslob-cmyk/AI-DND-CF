@@ -70,7 +70,14 @@ export async function registerImportRoutes(
       });
     }
 
-    const result = await runWarehouseImport(sql, files[0]);
+    const firstFile = files[0];
+    if (!firstFile) {
+      return reply.status(400).send({
+        data: null,
+        error: { code: "NO_FILES", message: "Nie przesłano pliku" },
+      });
+    }
+    const result = await runWarehouseImport(sql, firstFile);
 
     return reply.send({
       data: {
@@ -150,13 +157,15 @@ export async function registerImportRoutes(
         RETURNING id, entity_code, name, type, status
       `;
 
+      const row = result[0];
+      if (!row) throw new Error("INSERT liability returned no rows");
       return reply.status(201).send({
         data: {
-          id: result[0].id,
-          entityCode: result[0].entity_code,
-          name: result[0].name,
-          type: result[0].type,
-          status: result[0].status,
+          id: row.id,
+          entityCode: row.entity_code,
+          name: row.name,
+          type: row.type,
+          status: row.status,
         },
         error: null,
       });
@@ -264,14 +273,21 @@ export async function registerImportRoutes(
         });
       }
 
+      const row = result[0];
+      if (!row) {
+        return reply.status(404).send({
+          data: null,
+          error: { code: "NOT_FOUND", message: "Zobowiazanie nie znalezione" },
+        });
+      }
       return reply.send({
         data: {
-          id: result[0].id,
-          entityCode: result[0].entity_code,
-          name: result[0].name,
-          type: result[0].type,
-          status: result[0].status,
-          config: result[0].config,
+          id: row.id,
+          entityCode: row.entity_code,
+          name: row.name,
+          type: row.type,
+          status: row.status,
+          config: row.config,
         },
         error: null,
       });

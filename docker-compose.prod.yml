@@ -1,4 +1,49 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dashboard-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dashboard
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dashboard}
+      POSTGRES_DB: dashboard
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dashboard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app
+
+  backend:
+    build:
+      context: .
+      dockerfile: packages/backend/Dockerfile
+    container_name: dashboard-backend
+    restart: unless-stopped
+    expose:
+      - "3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgres://dashboard:${DB_PASSWORD:-dashboard}@postgres:5432/dashboard
+      - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD}
+      - JWT_SECRET=${JWT_SECRET}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    networks:
+      - app
+
   frontend:
     build:
       context: .
@@ -13,29 +58,8 @@ services:
     networks:
       - app
 
-  backend:
-    build:
-      context: .
-      dockerfile: packages/backend/Dockerfile
-    container_name: dashboard-backend
-    restart: unless-stopped
-    expose:
-      - "3001"
-    environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD}
-      - JWT_SECRET=${JWT_SECRET}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - CORS_ORIGIN=${CORS_ORIGIN}
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/health || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
-    networks:
-      - app
+volumes:
+  pgdata:
 
 networks:
   app:
