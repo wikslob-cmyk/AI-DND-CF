@@ -43,6 +43,9 @@ RUN mkdir -p /app/test/data && touch /app/test/data/05-versions-space.pdf
 COPY --from=builder /app/packages/shared/src packages/shared/src
 COPY --from=builder /app/packages/backend/dist packages/backend/dist
 
+# Copy SQL migrations (not included in tsc output)
+COPY packages/backend/src/db/migrations packages/backend/dist/backend/src/db/migrations
+
 ENV NODE_ENV=production
 EXPOSE 3001
 
