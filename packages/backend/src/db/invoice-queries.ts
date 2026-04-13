@@ -12,6 +12,36 @@ interface InvoiceQueryResult {
   totalPln: number;
 }
 
+interface InvoiceFlatRow {
+  id: number;
+  entityCode: string;
+  documentNumber: string;
+  contractorName: string;
+  contractorNip: string;
+  paymentDue: string;
+  currency: string;
+  grossValue: number;
+  remainingAmount: number;
+  remainingAmountPln: number;
+  daysUntilDue: number;
+  isOverdue: boolean;
+}
+
+interface InvoiceSummary {
+  totalPln: number;
+  invoiceCount: number;
+  contractorCount: number;
+}
+
+interface InvoiceListResult {
+  summary: {
+    all: InvoiceSummary;
+    overdue: InvoiceSummary;
+    inTerm: InvoiceSummary;
+  };
+  invoices: InvoiceFlatRow[];
+}
+
 /**
  * Converts remaining_amount to PLN using rate.
  */
@@ -193,41 +223,81 @@ export async function queryInvoiceTotalPln(
   entity: string,
   dateFrom: string,
   dateTo: string,
+  excludeNips: string[] = [],
 ): Promise<number> {
+  const hasExclusions = excludeNips.length > 0;
+
   const [row] = entity === "all"
-    ? await sql`
-        SELECT COALESCE(SUM(
-          CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
-               ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
-          END
-        ), 0) AS total
-        FROM invoice i
-        LEFT JOIN LATERAL (
-          SELECT rate_pln FROM exchange_rate
-          WHERE currency = i.currency
-          ORDER BY rate_date DESC LIMIT 1
-        ) er ON TRUE
-        WHERE i.document_type = ${documentType}
-          AND i.payment_due >= ${dateFrom}
-          AND i.payment_due < ${dateTo}
-      `
-    : await sql`
-        SELECT COALESCE(SUM(
-          CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
-               ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
-          END
-        ), 0) AS total
-        FROM invoice i
-        LEFT JOIN LATERAL (
-          SELECT rate_pln FROM exchange_rate
-          WHERE currency = i.currency
-          ORDER BY rate_date DESC LIMIT 1
-        ) er ON TRUE
-        WHERE i.document_type = ${documentType}
-          AND i.payment_due >= ${dateFrom}
-          AND i.payment_due < ${dateTo}
-          AND i.entity_code = ${entity}
-      `;
+    ? hasExclusions
+      ? await sql`
+          SELECT COALESCE(SUM(
+            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
+                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
+            END
+          ), 0) AS total
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND i.payment_due >= ${dateFrom}
+            AND i.payment_due < ${dateTo}
+            AND (i.contractor_nip IS NULL OR i.contractor_nip NOT IN ${sql(excludeNips)})
+        `
+      : await sql`
+          SELECT COALESCE(SUM(
+            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
+                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
+            END
+          ), 0) AS total
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND i.payment_due >= ${dateFrom}
+            AND i.payment_due < ${dateTo}
+        `
+    : hasExclusions
+      ? await sql`
+          SELECT COALESCE(SUM(
+            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
+                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
+            END
+          ), 0) AS total
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND i.payment_due >= ${dateFrom}
+            AND i.payment_due < ${dateTo}
+            AND i.entity_code = ${entity}
+            AND (i.contractor_nip IS NULL OR i.contractor_nip NOT IN ${sql(excludeNips)})
+        `
+      : await sql`
+          SELECT COALESCE(SUM(
+            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
+                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
+            END
+          ), 0) AS total
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND i.payment_due >= ${dateFrom}
+            AND i.payment_due < ${dateTo}
+            AND i.entity_code = ${entity}
+        `;
 
   return Number(row?.total ?? 0);
 }
@@ -239,39 +309,215 @@ export async function queryOverdueTotalPln(
   documentType: "FS" | "FZ",
   entity: string,
   today: string,
+  excludeNips: string[] = [],
 ): Promise<number> {
+  const hasExclusions = excludeNips.length > 0;
+
   const [row] = entity === "all"
-    ? await sql`
-        SELECT COALESCE(SUM(
-          CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
-               ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
-          END
-        ), 0) AS total
-        FROM invoice i
-        LEFT JOIN LATERAL (
-          SELECT rate_pln FROM exchange_rate
-          WHERE currency = i.currency
-          ORDER BY rate_date DESC LIMIT 1
-        ) er ON TRUE
-        WHERE i.document_type = ${documentType}
-          AND i.payment_due < ${today}
-      `
-    : await sql`
-        SELECT COALESCE(SUM(
-          CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
-               ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
-          END
-        ), 0) AS total
-        FROM invoice i
-        LEFT JOIN LATERAL (
-          SELECT rate_pln FROM exchange_rate
-          WHERE currency = i.currency
-          ORDER BY rate_date DESC LIMIT 1
-        ) er ON TRUE
-        WHERE i.document_type = ${documentType}
-          AND i.payment_due < ${today}
-          AND i.entity_code = ${entity}
-      `;
+    ? hasExclusions
+      ? await sql`
+          SELECT COALESCE(SUM(
+            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
+                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
+            END
+          ), 0) AS total
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND i.payment_due < ${today}
+            AND (i.contractor_nip IS NULL OR i.contractor_nip NOT IN ${sql(excludeNips)})
+        `
+      : await sql`
+          SELECT COALESCE(SUM(
+            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
+                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
+            END
+          ), 0) AS total
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND i.payment_due < ${today}
+        `
+    : hasExclusions
+      ? await sql`
+          SELECT COALESCE(SUM(
+            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
+                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
+            END
+          ), 0) AS total
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND i.payment_due < ${today}
+            AND i.entity_code = ${entity}
+            AND (i.contractor_nip IS NULL OR i.contractor_nip NOT IN ${sql(excludeNips)})
+        `
+      : await sql`
+          SELECT COALESCE(SUM(
+            CASE WHEN i.currency = 'PLN' THEN i.remaining_amount
+                 ELSE i.remaining_amount * COALESCE(er.rate_pln, 1)
+            END
+          ), 0) AS total
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND i.payment_due < ${today}
+            AND i.entity_code = ${entity}
+        `;
 
   return Number(row?.total ?? 0);
+}
+
+/**
+ * Fetches all invoices for a document type + entity, with PLN conversion and days-until-due.
+ * Returns flat list + pre-computed summary for cards.
+ */
+export async function queryAllInvoices(
+  documentType: "FS" | "FZ",
+  entity: string,
+  excludeNips: string[] = [],
+): Promise<InvoiceListResult> {
+  const hasExclusions = excludeNips.length > 0;
+
+  const rows = entity === "all"
+    ? hasExclusions
+      ? await sql`
+          SELECT i.*, COALESCE(er.rate_pln, 1) AS rate_pln,
+            (i.payment_due - CURRENT_DATE) AS days_until_due
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND (i.contractor_nip IS NULL OR i.contractor_nip NOT IN ${sql(excludeNips)})
+          ORDER BY i.payment_due
+        `
+      : await sql`
+          SELECT i.*, COALESCE(er.rate_pln, 1) AS rate_pln,
+            (i.payment_due - CURRENT_DATE) AS days_until_due
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+          ORDER BY i.payment_due
+        `
+    : hasExclusions
+      ? await sql`
+          SELECT i.*, COALESCE(er.rate_pln, 1) AS rate_pln,
+            (i.payment_due - CURRENT_DATE) AS days_until_due
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND i.entity_code = ${entity}
+            AND (i.contractor_nip IS NULL OR i.contractor_nip NOT IN ${sql(excludeNips)})
+          ORDER BY i.payment_due
+        `
+      : await sql`
+          SELECT i.*, COALESCE(er.rate_pln, 1) AS rate_pln,
+            (i.payment_due - CURRENT_DATE) AS days_until_due
+          FROM invoice i
+          LEFT JOIN LATERAL (
+            SELECT rate_pln FROM exchange_rate
+            WHERE currency = i.currency
+            ORDER BY rate_date DESC LIMIT 1
+          ) er ON TRUE
+          WHERE i.document_type = ${documentType}
+            AND i.entity_code = ${entity}
+          ORDER BY i.payment_due
+        `;
+
+  const invoices: InvoiceFlatRow[] = [];
+  const overdueNips = new Set<string>();
+  const inTermNips = new Set<string>();
+  const allNips = new Set<string>();
+  let overduePln = 0;
+  let inTermPln = 0;
+  let overdueCount = 0;
+  let inTermCount = 0;
+
+  for (const row of rows) {
+    const remainingPln = toAmountPln(
+      row.currency as string,
+      row.remaining_amount as string,
+      row.rate_pln as string,
+    );
+    const daysUntilDue = Number(row.days_until_due);
+    const isOverdue = daysUntilDue < 0;
+    const nip = (row.contractor_nip as string) || "BRAK-NIP";
+
+    allNips.add(nip);
+
+    if (isOverdue) {
+      overdueCount++;
+      overduePln += remainingPln;
+      overdueNips.add(nip);
+    } else {
+      inTermCount++;
+      inTermPln += remainingPln;
+      inTermNips.add(nip);
+    }
+
+    invoices.push({
+      id: row.id as number,
+      entityCode: row.entity_code as string,
+      documentNumber: row.document_number as string,
+      contractorName: row.contractor_name as string,
+      contractorNip: nip,
+      paymentDue: row.payment_due as string,
+      currency: row.currency as string,
+      grossValue: Number(row.gross_value),
+      remainingAmount: Number(row.remaining_amount as string),
+      remainingAmountPln: remainingPln,
+      daysUntilDue,
+      isOverdue,
+    });
+  }
+
+  const totalPln = overduePln + inTermPln;
+
+  return {
+    summary: {
+      all: {
+        totalPln,
+        invoiceCount: invoices.length,
+        contractorCount: allNips.size,
+      },
+      overdue: {
+        totalPln: overduePln,
+        invoiceCount: overdueCount,
+        contractorCount: overdueNips.size,
+      },
+      inTerm: {
+        totalPln: inTermPln,
+        invoiceCount: inTermCount,
+        contractorCount: inTermNips.size,
+      },
+    },
+    invoices,
+  };
 }

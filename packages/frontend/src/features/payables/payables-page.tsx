@@ -2,68 +2,64 @@ import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api-client";
 import { EntityTabs } from "@/features/dashboard/entity-tabs";
-import { InvoiceTable } from "@/features/receivables/invoice-table";
+import { InvoiceSummaryCards } from "@/features/invoices/invoice-summary-cards";
+import { InvoiceGroupedTable } from "@/features/invoices/invoice-grouped-table";
 
 interface InvoiceRow {
   id: number;
   entityCode: string;
   documentNumber: string;
   contractorName: string;
+  contractorNip: string;
   paymentDue: string;
   currency: string;
+  grossValue: number;
   remainingAmount: number;
   remainingAmountPln: number;
+  daysUntilDue: number;
+  isOverdue: boolean;
 }
 
-interface InvoiceGroup {
-  contractorNip: string;
-  contractorName: string;
-  totalRemainingPln: number;
+interface SummaryItem {
+  totalPln: number;
+  invoiceCount: number;
+  contractorCount: number;
+}
+
+interface AllInvoicesResponse {
+  summary: {
+    all: SummaryItem;
+    overdue: SummaryItem;
+    inTerm: SummaryItem;
+  };
   invoices: InvoiceRow[];
 }
 
-interface PeriodData {
-  groups: InvoiceGroup[];
-  totalPln: number;
-}
-
 function PayablesContent({ entity }: { entity: string }): ReactNode {
-  const periods = ["7d", "30d", "overdue"] as const;
-  const titles: Record<string, string> = {
-    "7d": "Najblizsze 7 dni",
-    "30d": "Najblizsze 30 dni",
-    overdue: "Przeterminowane",
-  };
-
-  const queries = periods.map((period) =>
-    useQuery({
-      queryKey: ["payables", entity, period],
-      queryFn: () =>
-        api.get<PeriodData>(
-          `/api/payables?entity=${entity}&period=${period}`,
-        ),
-    }),
-  );
-
-  const isLoading = queries.some((q) => q.isLoading);
+  const { data, isLoading } = useQuery({
+    queryKey: ["payables", "all", entity],
+    queryFn: () =>
+      api.get<AllInvoicesResponse>(
+        `/api/payables/all?entity=${entity}`,
+      ),
+  });
 
   if (isLoading) {
     return <p className="py-8 text-center text-gray-500">Ladowanie...</p>;
   }
 
+  if (!data) {
+    return <p className="py-8 text-center text-gray-500">Brak danych</p>;
+  }
+
   return (
-    <div className="space-y-4">
-      {periods.map((period, idx) => {
-        const data = queries[idx]?.data;
-        return (
-          <InvoiceTable
-            key={period}
-            title={titles[period] ?? period}
-            groups={data?.groups ?? []}
-            totalPln={data?.totalPln ?? 0}
-          />
-        );
-      })}
+    <div className="space-y-6">
+      <InvoiceSummaryCards
+        all={data.summary.all}
+        overdue={data.summary.overdue}
+        inTerm={data.summary.inTerm}
+      />
+      <InvoiceGroupedTable invoices={data.invoices} />
     </div>
   );
 }
@@ -78,7 +74,7 @@ export function PayablesPage(): ReactNode {
           Zobowiazania handlowe
         </h2>
         <p className="text-sm text-gray-500">
-          Faktury zakupu (FZ) pogrupowane per kontrahent
+          Faktury zakupu pogrupowane wg tygodni lub kontrahenta
         </p>
       </div>
       <EntityTabs activeEntity={entity} onEntityChange={setEntity}>

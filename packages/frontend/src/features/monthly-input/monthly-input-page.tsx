@@ -1,5 +1,6 @@
 import { type ReactNode } from "react";
 import { MonthlyInputForm } from "./monthly-input-form";
+import { ManualEntriesSection } from "./manual-entries-section";
 
 export function MonthlyInputPage(): ReactNode {
   return (
@@ -13,6 +14,7 @@ export function MonthlyInputPage(): ReactNode {
         </p>
       </div>
       <MonthlyInputForm />
+      <ManualEntriesSection />
     </div>
   );
 }

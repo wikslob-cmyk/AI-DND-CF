@@ -89,9 +89,13 @@ export async function importSaldeoFiles(
   }
 
   // Phase 3: Transactional DB write
+  const importedEntities = [
+    ...new Set(allInvoices.map((inv) => inv.entityCode)),
+  ];
+
   try {
     await db.beginTransaction();
-    await db.deleteInvoices();
+    await db.deleteInvoices(importedEntities);
     await db.insertInvoices(allInvoices);
 
     const importId = await db.insertImportLog("success", {

@@ -41,4 +41,4 @@ export const SALDEO_HEADER_ROW = 2;
 export const SALDEO_DATA_START_ROW = 3;
 
 export const RECEIVABLE_REGEX = /^[A-Z]+_FS_$/;
-export const PAYABLE_REGEX = /^[A-Z]+_FZ_$/;
+export const PAYABLE_REGEX = /^[A-Z]+_(FZ|PK|TOW)_$/;

@@ -15,6 +15,7 @@ import { registerWarehouseRoutes } from "./routes/warehouse.js";
 import { registerDashboardSummaryRoutes } from "./routes/dashboard-summary.js";
 import { registerViktorRoutes } from "./routes/viktor.js";
 import { registerCashflowRoutes } from "./routes/cashflow.js";
+import { registerManualEntryRoutes } from "./routes/manual-entries.js";
 import { JWT_EXPIRY } from "./auth/constants.js";
 import { checkConnection, sql } from "./db/connection.js";
 import { runMigrations } from "./db/migrate.js";
@@ -100,6 +101,7 @@ export async function buildApp() {
     await registerDashboardSummaryRoutes(protectedScope);
     await registerViktorRoutes(protectedScope);
     await registerCashflowRoutes(protectedScope);
+    await registerManualEntryRoutes(protectedScope);
   });
 
   return app;

@@ -18,8 +18,12 @@ function buildAdapter(conn: Sql): DbAdapter {
     async commitTransaction(): Promise<void> { /* no-op */ },
     async rollbackTransaction(): Promise<void> { /* no-op */ },
 
-    async deleteInvoices(): Promise<void> {
-      await conn`DELETE FROM invoice`;
+    async deleteInvoices(entityCodes?: string[]): Promise<void> {
+      if (entityCodes && entityCodes.length > 0) {
+        await conn`DELETE FROM invoice WHERE entity_code IN ${conn(entityCodes)}`;
+      } else {
+        await conn`DELETE FROM invoice`;
+      }
     },
 
     async insertInvoices(invoices: ParsedInvoice[]): Promise<void> {

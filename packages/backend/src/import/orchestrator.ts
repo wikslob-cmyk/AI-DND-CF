@@ -25,7 +25,7 @@ export interface DbAdapter {
   beginTransaction(): Promise<void>;
   commitTransaction(): Promise<void>;
   rollbackTransaction(): Promise<void>;
-  deleteInvoices(): Promise<void>;
+  deleteInvoices(entityCodes?: string[]): Promise<void>;
   insertInvoices(invoices: ParsedInvoice[]): Promise<void>;
   deleteWarehouseItems(): Promise<void>;
   insertWarehouseItems(items: ParsedWarehouse["items"]): Promise<void>;

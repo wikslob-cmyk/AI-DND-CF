@@ -11,7 +11,11 @@ interface SummaryData {
   overduePayables: number;
   liabilities30d: number;
   bankBalance: number;
+  salaries: number;
+  vatRefund: number;
   warehouseValue: number;
+  manualReceivables: { id: number; name: string; grossValue: number; grossValuePln: number; currency: string }[];
+  manualPayables: { id: number; name: string; grossValue: number; grossValuePln: number; currency: string }[];
   lastImport: { importedAt: string; status: string } | null;
 }
 

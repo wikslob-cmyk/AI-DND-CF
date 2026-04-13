@@ -184,10 +184,15 @@ export function parseSaldeoFile(
       }
     }
 
-    // If remaining is 0 for unpaid invoices, use grossValue - partialPayments
+    // Calculate remaining AFTER grossValue is resolved (including VAT fallback)
     const finalRemaining = remainingAmount > 0
       ? remainingAmount
       : Math.max(0, grossValue - partialPayments);
+
+    // Skip if both gross and remaining are 0 — no financial data
+    if (grossValue === 0 && finalRemaining === 0) {
+      continue;
+    }
 
     results.push({
       entityCode,

@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/skill-activation-prompt.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/skill-activation-prompt.sh\""
           }
         ]
       }
@@ -18,11 +18,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/stop-build-check-enhanced.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-build-check-enhanced.sh\""
           },
           {
             "type": "command",
-            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/error-handling-reminder.sh"
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/error-handling-reminder.sh\""
           }
         ]
       }
