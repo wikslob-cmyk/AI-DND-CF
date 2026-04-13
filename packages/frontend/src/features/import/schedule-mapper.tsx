@@ -77,7 +77,7 @@ export function ScheduleMapper({
   function updateMapping(filename: string, update: Partial<FileMapping>) {
     setMapping((prev) => ({
       ...prev,
-      [filename]: { ...prev[filename], ...update },
+      [filename]: { ...(prev[filename] ?? { mode: "skip" as const }), ...update },
     }));
   }
 

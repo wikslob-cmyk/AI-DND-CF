@@ -26,8 +26,12 @@ interface MonthlySchedule {
     liabilityName: string;
     entityCode: string;
     total: number;
+    capital: number;
+    interest: number;
     isRolling?: boolean;
   }>;
+  totalCapital: number;
+  totalInterest: number;
   totalAmount: number;
 }
 

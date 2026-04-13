@@ -4,7 +4,7 @@ import {
   LIABILITY_TYPES,
   LIABILITY_TYPE_LABELS,
 } from "@dnd/shared";
-import type { EntityCode, LiabilityType } from "@dnd/shared";
+import type { EntityCode } from "@dnd/shared";
 import { FileDropzone } from "./file-dropzone.js";
 import { ImportStatus } from "./import-status.js";
 import { ImportedFilesInfo } from "./imported-files-info.js";

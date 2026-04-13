@@ -80,7 +80,7 @@ export function ManualEntryForm({
 
   const hasBalloon =
     preview.length > 0 &&
-    preview[preview.length - 1].capital >
+    preview[preview.length - 1]!.capital >
       (parseFloat(monthlyCapital) || 0) * 1.01;
 
   async function handleSubmit() {
