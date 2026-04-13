@@ -2,60 +2,20 @@ import type { ParsedScheduleEntry } from "./schedule-types.js";
 import { ScheduleParseError } from "./schedule-types.js";
 import { toNumber } from "./schedule-parser-utils.js";
 
-/**
- * Compute payment date based on contract start date + installment number.
- * Millennium files don't contain dates per installment, so we derive them.
- */
-function computePaymentDate(
-  startDate: Date,
-  installmentNumber: number,
-): Date {
-  const date = new Date(startDate);
-  date.setMonth(date.getMonth() + installmentNumber);
-  return date;
-}
+const EXCEL_EPOCH = new Date(1899, 11, 30);
+const EXCEL_DATE_THRESHOLD = 40000; // Values above this in Lp. column are Excel serial dates
 
-/**
- * Try to extract a contract start date from the sheet data.
- * Looks for rows containing date-like patterns before the header row.
- */
-function findContractStartDate(
-  data: unknown[][],
-  headerRow: number,
-): Date | null {
-  for (let i = 0; i < headerRow; i++) {
-    const row = data[i];
-    if (!row) continue;
-    for (const cell of row) {
-      const text = String(cell ?? "").trim();
-      // Match patterns like "2022-01-15" or "15-01-2022" or "15.01.2022"
-      const isoMatch = text.match(/(\d{4})-(\d{2})-(\d{2})/);
-      if (isoMatch) {
-        const d = new Date(
-          Number(isoMatch[1]),
-          Number(isoMatch[2]) - 1,
-          Number(isoMatch[3]),
-        );
-        if (!isNaN(d.getTime())) return d;
-      }
-      const dmyMatch = text.match(/(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})/);
-      if (dmyMatch) {
-        const d = new Date(
-          Number(dmyMatch[3]),
-          Number(dmyMatch[2]) - 1,
-          Number(dmyMatch[1]),
-        );
-        if (!isNaN(d.getTime())) return d;
-      }
-    }
-  }
-  return null;
+function excelDateToJs(serial: number): Date {
+  return new Date(EXCEL_EPOCH.getTime() + serial * 86400000);
 }
 
 /**
  * Parse Millennium Leasing format (tabela_rat_*.xlsx)
- * Headers: Lp. | Stala (kapitalowa) czesc raty | Zmienna (finansowa) czesc raty | Rata netto | ...
- * First row after header is "Pierwsza rata*" (initial payment)
+ *
+ * These files have mixed Lp. column: small integers (1,2,3...) for early rows,
+ * then Excel serial dates (45996, 46026...) for later rows.
+ * We detect the first Excel date, compute the monthly interval,
+ * and backfill dates for earlier rows.
  */
 export function parseMillenniumFormat(
   data: unknown[][],
@@ -79,53 +39,103 @@ export function parseMillenniumFormat(
     );
   }
 
-  const contractStart = findContractStartDate(data, headerRow);
-  // If no start date found in file, use a fallback that makes the issue visible
-  const startDate = contractStart ?? new Date(2000, 0, 1);
-
-  const entries: ParsedScheduleEntry[] = [];
-
-  // First row might be "Pierwsza rata*" (initial payment) - include it as installment 0
-  const firstDataRow = data[headerRow + 1];
-  if (firstDataRow) {
-    const firstLabel = String(firstDataRow[0] ?? "")
-      .trim()
-      .toLowerCase();
-    if (firstLabel.includes("pierwsza rata")) {
-      const capital = toNumber(firstDataRow[1]);
-      const interest = toNumber(firstDataRow[2]);
-      const total = toNumber(firstDataRow[3]) || capital + interest;
-      if (capital > 0 || total > 0) {
-        entries.push({
-          installmentNumber: 0,
-          paymentDate: computePaymentDate(startDate, 0),
-          capital,
-          interest,
-          total,
-        });
-      }
-    }
+  // Phase 1: collect raw entries with Lp. values
+  interface RawEntry {
+    lpValue: number;
+    capital: number;
+    interest: number;
+    total: number;
+    isFirstPayment: boolean;
   }
+
+  const rawEntries: RawEntry[] = [];
 
   for (let i = headerRow + 1; i < data.length; i++) {
     const row = data[i];
     if (!row || row.length < 4) continue;
 
-    const installmentNumber = toNumber(row[0]);
-    if (installmentNumber <= 0 || !Number.isInteger(installmentNumber))
+    const firstCell = String(row[0] ?? "").trim().toLowerCase();
+
+    if (firstCell.includes("pierwsza rata")) {
+      const capital = toNumber(row[1]);
+      const interest = toNumber(row[2]);
+      const total = toNumber(row[3]) || capital + interest;
+      if (capital > 0 || total > 0) {
+        rawEntries.push({ lpValue: 0, capital, interest, total, isFirstPayment: true });
+      }
       continue;
+    }
+
+    const lpValue = toNumber(row[0]);
+    if (lpValue <= 0) continue;
 
     const capital = toNumber(row[1]);
     const interest = toNumber(row[2]);
     const total = toNumber(row[3]) || capital + interest;
+    if (capital === 0 && total === 0) continue;
 
-    entries.push({
-      installmentNumber,
-      paymentDate: computePaymentDate(startDate, installmentNumber),
-      capital,
-      interest,
-      total,
-    });
+    rawEntries.push({ lpValue, capital, interest, total, isFirstPayment: false });
+  }
+
+  if (rawEntries.length === 0) return [];
+
+  // Phase 2: find first Excel date in Lp. column to anchor dates
+  let anchorDate: Date | null = null;
+  let anchorIndex = -1;
+
+  for (let i = 0; i < rawEntries.length; i++) {
+    const entry = rawEntries[i]!;
+    if (!entry.isFirstPayment && entry.lpValue > EXCEL_DATE_THRESHOLD) {
+      anchorDate = excelDateToJs(entry.lpValue);
+      anchorIndex = i;
+      break;
+    }
+  }
+
+  // Phase 3: assign dates
+  const entries: ParsedScheduleEntry[] = [];
+
+  if (anchorDate && anchorIndex >= 0) {
+    // We have an anchor — backfill earlier entries monthly
+    for (let i = 0; i < rawEntries.length; i++) {
+      const raw = rawEntries[i]!;
+      let paymentDate: Date;
+
+      if (raw.lpValue > EXCEL_DATE_THRESHOLD) {
+        paymentDate = excelDateToJs(raw.lpValue);
+      } else {
+        // Backfill: anchorDate minus (anchorIndex - i) months
+        const monthsBack = anchorIndex - i;
+        paymentDate = new Date(anchorDate);
+        paymentDate.setMonth(paymentDate.getMonth() - monthsBack);
+      }
+
+      entries.push({
+        installmentNumber: i,
+        paymentDate,
+        capital: raw.capital,
+        interest: raw.interest,
+        total: raw.total,
+      });
+    }
+  } else {
+    // No Excel dates found — fall back to monthly from today minus entry count
+    const now = new Date();
+    const startDate = new Date(now.getFullYear(), now.getMonth() - rawEntries.length, 1);
+
+    for (let i = 0; i < rawEntries.length; i++) {
+      const raw = rawEntries[i]!;
+      const paymentDate = new Date(startDate);
+      paymentDate.setMonth(startDate.getMonth() + i);
+
+      entries.push({
+        installmentNumber: i,
+        paymentDate,
+        capital: raw.capital,
+        interest: raw.interest,
+        total: raw.total,
+      });
+    }
   }
 
   return entries;
