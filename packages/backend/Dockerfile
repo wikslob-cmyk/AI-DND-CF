@@ -43,4 +43,4 @@ COPY --from=builder /app/packages/backend/dist packages/backend/dist
 ENV NODE_ENV=production
 EXPOSE 3001
 
-CMD ["node", "packages/backend/dist/server.js"]
+CMD ["node", "packages/backend/dist/backend/src/server.js"]
