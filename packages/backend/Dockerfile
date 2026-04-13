@@ -36,6 +36,9 @@ COPY packages/backend/package.json packages/backend/
 # Install production dependencies only
 RUN pnpm install --frozen-lockfile --prod
 
+# pdf-parse bug workaround: it tries to read ./test/data/05-versions-space.pdf at import time
+RUN mkdir -p /app/test/data && touch /app/test/data/05-versions-space.pdf
+
 # Copy built output
 COPY --from=builder /app/packages/shared/src packages/shared/src
 COPY --from=builder /app/packages/backend/dist packages/backend/dist
