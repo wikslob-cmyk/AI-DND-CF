@@ -119,6 +119,43 @@ describe("importSaldeoFiles", () => {
     expect(db.insertInvoices).toHaveBeenCalled();
   });
 
+  it("deletes stale invoices for an entity whose file has zero unpaid rows", async () => {
+    const XLSX = await import("xlsx");
+    const wb = XLSX.utils.book_new();
+    const headers = [
+      "Lp", "Typ", "Id", "Numer dokumentu", "Numer z FK",
+      "Kod Kontrahenta", "Kontrahent", "NIP", "Konto bankowe",
+      "Data wpływu", "Data wystawienia", "Data dostawy",
+      "Termin płatności", "Data dodania", "Data eksportu",
+      "Waluta", "Wartość brutto", "Wartość netto", "Suma VAT",
+      "Kategoria główna", "Zapłacono", "Data ostatniej płatności częściowej",
+      "Suma płatności częściowych", "Pozostało do zapłaty",
+    ];
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["Header row 0"],
+      [""],
+      headers,
+      [
+        1, "TDMSP_FZ_", 100, "FV/PAID", "", "", "Paid Co",
+        "1234567890", "", "", "", "", 46000, "", "",
+        "PLN", 1000, 813, 187, "", "TAK", "", 1000, 0,
+      ],
+    ]);
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    const files: FileInput[] = [
+      { filename: "lista-dokumentow-tdmsp.xlsx", buffer },
+    ];
+    const db = createMockDb();
+    const fallback = createMockFallback();
+
+    const result = await importSaldeoFiles(files, db, fallback);
+
+    expect(result.status).toBe("success");
+    expect(db.insertedInvoices).toHaveLength(0);
+    expect(db.deleteInvoices).toHaveBeenCalledWith(["tdmsp"]);
+  });
+
   it("fetches NBP rate for EUR invoices", async () => {
     // Create a mock file that would have EUR invoices
     // Instead, test that the fallback is called when needed

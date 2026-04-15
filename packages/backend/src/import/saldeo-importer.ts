@@ -89,8 +89,15 @@ export async function importSaldeoFiles(
   }
 
   // Phase 3: Transactional DB write
+  // Derive entity codes from filenames, not parsed rows — a file where
+  // every row is paid/skipped parses to zero invoices, but we still need
+  // to DELETE stale rows for that entity.
   const importedEntities = [
-    ...new Set(allInvoices.map((inv) => inv.entityCode)),
+    ...new Set(
+      filenames
+        .map((f) => /lista-dokumentow-(\w+)\.xlsx$/i.exec(f)?.[1]?.toLowerCase())
+        .filter((code): code is string => Boolean(code)),
+    ),
   ];
 
   try {
