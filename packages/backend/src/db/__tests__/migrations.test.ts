@@ -117,13 +117,12 @@ describe("Database migrations", () => {
       });
     });
 
-    it("should have informational positions (ISAG, NCBiR, PARP)", () => {
+    it("should have informational positions (NCBiR, PARP)", () => {
       const infoItems = LIABILITIES.filter(
         (l) => l.type === "info" || l.status === "informational" || l.status === "pending_write_off",
       );
       const names = infoItems.map((l) => l.name);
 
-      expect(names).toContain("ISAG (IKEA)");
       expect(names).toContain("NCBiR 750 000 PLN");
       expect(names).toContain("NCBiR 3 200 000 PLN");
       expect(names).toContain("PARP 950 000 PLN");

@@ -12,7 +12,7 @@ interface LiabilitySeed {
 }
 
 const LIABILITIES: LiabilitySeed[] = [
-  // cgesp - 7 positions
+  // cgesp - 6 positions
   {
     entity_code: "cgesp",
     name: "Millennium Leasing - piec",
@@ -71,16 +71,6 @@ const LIABILITIES: LiabilitySeed[] = [
     original_amount: 0,
     current_balance: 0,
     source_file: "harmonogram_splat_EFL6F01695.xlsx",
-    config: {},
-  },
-  {
-    entity_code: "cgesp",
-    name: "ISAG (IKEA)",
-    type: "info",
-    status: "pending_write_off",
-    original_amount: 0,
-    current_balance: 0,
-    source_file: null,
     config: {},
   },
 

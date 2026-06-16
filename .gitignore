@@ -13,6 +13,9 @@ build/
 .env.local
 .env.*.local
 
+# MCP config zawiera token API Hostingera - nie commitowac
+.mcp.json
+
 # Logs
 *.log
 npm-debug.log*
@@ -33,3 +36,6 @@ coverage/
 # Temporary
 tmp/
 temp/
+
+# Wrazliwe eksporty danych spolek - nie commitowac
+_export-*/
