@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   importSaldeoFiles,
@@ -10,6 +10,10 @@ import {
 import type { FallbackRateProvider } from "../../services/nbp-rates.js";
 
 const ZASOBY_DIR = join(__dirname, "..", "..", "..", "..", "..", "zasoby");
+
+// Integration tests that parse real company exports in zasoby/ (not committed —
+// sensitive data). Skipped when the directory is absent (e.g. CI / fresh clone).
+const HAS_ZASOBY = existsSync(ZASOBY_DIR);
 
 function createMockDb(): DbAdapter & {
   insertedInvoices: unknown[];
@@ -68,7 +72,7 @@ describe("importSaldeoFiles", () => {
     vi.restoreAllMocks();
   });
 
-  it("imports 5 valid files and returns success", async () => {
+  it.skipIf(!HAS_ZASOBY)("imports 5 valid files and returns success", async () => {
     const files = ["cgesp", "dngro", "dndsp", "tdmsp", "tdpsp"].map(
       loadSaldeoFile,
     );
@@ -85,7 +89,7 @@ describe("importSaldeoFiles", () => {
     expect(db.insertedInvoices.length).toBeGreaterThan(0);
   });
 
-  it("rolls back on corrupted file and returns failed", async () => {
+  it.skipIf(!HAS_ZASOBY)("rolls back on corrupted file and returns failed", async () => {
     const goodFile = loadSaldeoFile("cgesp");
     const badFile: FileInput = {
       filename: "lista-dokumentow-dngro.xlsx",
@@ -108,7 +112,7 @@ describe("importSaldeoFiles", () => {
     expect(db.insertedInvoices.length).toBe(0);
   });
 
-  it("replaces previous snapshot (deletes old invoices)", async () => {
+  it.skipIf(!HAS_ZASOBY)("replaces previous snapshot (deletes old invoices)", async () => {
     const files = [loadSaldeoFile("cgesp")];
     const db = createMockDb();
     const fallback = createMockFallback();
@@ -156,7 +160,7 @@ describe("importSaldeoFiles", () => {
     expect(db.deleteInvoices).toHaveBeenCalledWith(["tdmsp"]);
   });
 
-  it("fetches NBP rate for EUR invoices", async () => {
+  it.skipIf(!HAS_ZASOBY)("fetches NBP rate for EUR invoices", async () => {
     // Create a mock file that would have EUR invoices
     // Instead, test that the fallback is called when needed
     // Use real cgesp file (which has PLN invoices) — no NBP call needed
@@ -173,7 +177,7 @@ describe("importSaldeoFiles", () => {
 });
 
 describe("importWarehouseFile", () => {
-  it("imports warehouse file and returns success", async () => {
+  it.skipIf(!HAS_ZASOBY)("imports warehouse file and returns success", async () => {
     const file: FileInput = {
       filename: "Zestawienie magazynowe DND 10.04.26.xlsx",
       buffer: readFileSync(

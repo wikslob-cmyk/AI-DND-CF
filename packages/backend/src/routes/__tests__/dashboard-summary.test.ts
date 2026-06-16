@@ -9,10 +9,25 @@ vi.mock("../../db/connection.js", () => {
   return { sql: mockSql };
 });
 
+vi.mock("../../db/invoice-queries.js", () => ({
+  queryInvoiceTotalPln: vi.fn(),
+  queryOverdueTotalPln: vi.fn(),
+}));
+
 import { sql } from "../../db/connection.js";
+import {
+  queryInvoiceTotalPln,
+  queryOverdueTotalPln,
+} from "../../db/invoice-queries.js";
 import { registerDashboardSummaryRoutes } from "../dashboard-summary.js";
 
 const mockSql = sql as unknown as ReturnType<typeof vi.fn>;
+const mockInvoiceTotal = queryInvoiceTotalPln as unknown as ReturnType<
+  typeof vi.fn
+>;
+const mockOverdueTotal = queryOverdueTotalPln as unknown as ReturnType<
+  typeof vi.fn
+>;
 
 async function buildTestApp(): Promise<FastifyInstance> {
   const app = Fastify();
@@ -32,6 +47,8 @@ describe("dashboard summary routes", () => {
   beforeEach(async () => {
     app = await buildTestApp();
     mockSql.mockReset();
+    mockInvoiceTotal.mockReset();
+    mockOverdueTotal.mockReset();
   });
 
   afterEach(async () => {
@@ -61,31 +78,35 @@ describe("dashboard summary routes", () => {
   });
 
   it("GET dashboard/summary?entity=all returns aggregated sums", async () => {
-    // receivables
-    mockSql.mockResolvedValueOnce([{ total: "50000.00" }]);
-    // payables
-    mockSql.mockResolvedValueOnce([{ total: "30000.00" }]);
-    // schedule
-    mockSql.mockResolvedValueOnce([{ total: "15000.00" }]);
-    // rolling
-    mockSql.mockResolvedValueOnce([
-      {
-        config: { monthly_capital: 70000, monthly_interest: 18000 },
-      },
-    ]);
-    // bank balance
-    mockSql.mockResolvedValueOnce([{ total: "500000.00" }]);
-    // warehouse
-    mockSql.mockResolvedValueOnce([{ total: "200000.00" }]);
-    // last import
-    mockSql.mockResolvedValueOnce([
-      {
-        imported_at: "2026-04-12T10:00:00Z",
-        status: "success",
-      },
-    ]);
-    // overdue
-    mockSql.mockResolvedValueOnce([{ total: "10000.00" }]);
+    // Invoice helpers: receivables (FS) then payables (FZ)
+    mockInvoiceTotal.mockResolvedValueOnce(50000).mockResolvedValueOnce(30000);
+    // Overdue helpers: payables (FZ) then receivables (FS)
+    mockOverdueTotal.mockResolvedValueOnce(2000).mockResolvedValueOnce(10000);
+
+    // Inline sql calls, in route order for entity=all:
+    mockSql
+      // schedule
+      .mockResolvedValueOnce([{ total: "15000.00" }])
+      // rolling (limit/factoring configs)
+      .mockResolvedValueOnce([
+        { config: { monthly_capital: 70000, monthly_interest: 18000 } },
+      ])
+      // monthly_input (bank / salaries / vat)
+      .mockResolvedValueOnce([
+        {
+          bank_total: "500000.00",
+          salaries_total: "40000.00",
+          vat_refund_total: "5000.00",
+        },
+      ])
+      // warehouse (dngro)
+      .mockResolvedValueOnce([{ total: "200000.00" }])
+      // last import
+      .mockResolvedValueOnce([
+        { imported_at: "2026-04-12T10:00:00Z", status: "success" },
+      ])
+      // manual entries
+      .mockResolvedValueOnce([]);
 
     const token = signToken(app);
     const response = await app.inject({
@@ -96,31 +117,41 @@ describe("dashboard summary routes", () => {
 
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.body);
-    expect(body.data.receivables30d).toBe(50000);
-    expect(body.data.payables30d).toBe(30000);
+    expect(body.data.entity).toBe("all");
+    expect(body.data.receivablesTotal).toBe(50000);
+    expect(body.data.payablesTotal).toBe(30000);
+    expect(body.data.overduePayables).toBe(2000);
+    expect(body.data.overdueReceivables).toBe(10000);
     expect(body.data.liabilities30d).toBe(15000 + 70000 + 18000);
     expect(body.data.bankBalance).toBe(500000);
+    expect(body.data.salaries).toBe(40000);
+    expect(body.data.vatRefund).toBe(5000);
     expect(body.data.warehouseValue).toBe(200000);
-    expect(body.data.overdueReceivables).toBe(10000);
     expect(body.data.lastImport).not.toBeNull();
   });
 
-  it("GET dashboard/summary?entity=cgesp returns only CGE sums", async () => {
-    // receivables
-    mockSql.mockResolvedValueOnce([{ total: "20000.00" }]);
-    // payables
-    mockSql.mockResolvedValueOnce([{ total: "10000.00" }]);
-    // schedule
-    mockSql.mockResolvedValueOnce([{ total: "5000.00" }]);
-    // rolling (none for cgesp)
-    mockSql.mockResolvedValueOnce([]);
-    // bank balance
-    mockSql.mockResolvedValueOnce([{ total: "100000.00" }]);
-    // No warehouse query for cgesp (only dngro)
-    // last import
-    mockSql.mockResolvedValueOnce([]);
-    // overdue
-    mockSql.mockResolvedValueOnce([{ total: "3000.00" }]);
+  it("GET dashboard/summary?entity=cgesp returns only CGE sums and no warehouse", async () => {
+    mockInvoiceTotal.mockResolvedValueOnce(20000).mockResolvedValueOnce(10000);
+    mockOverdueTotal.mockResolvedValueOnce(1000).mockResolvedValueOnce(3000);
+
+    // entity=cgesp skips the warehouse query (only 'all' or 'dngro' run it)
+    mockSql
+      // schedule
+      .mockResolvedValueOnce([{ total: "5000.00" }])
+      // rolling (none for cgesp)
+      .mockResolvedValueOnce([])
+      // monthly_input
+      .mockResolvedValueOnce([
+        {
+          bank_total: "100000.00",
+          salaries_total: "0.00",
+          vat_refund_total: "0.00",
+        },
+      ])
+      // last import
+      .mockResolvedValueOnce([])
+      // manual entries
+      .mockResolvedValueOnce([]);
 
     const token = signToken(app);
     const response = await app.inject({
@@ -132,21 +163,42 @@ describe("dashboard summary routes", () => {
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.body);
     expect(body.data.entity).toBe("cgesp");
-    expect(body.data.receivables30d).toBe(20000);
+    expect(body.data.receivablesTotal).toBe(20000);
     expect(body.data.warehouseValue).toBe(0); // not dngro
+    expect(body.data.lastImport).toBeNull();
   });
 
-  it("currency amounts are converted to PLN", async () => {
-    // The SQL itself handles conversion with exchange_rate join
-    // This test verifies the aggregation returns correct numbers
-    mockSql.mockResolvedValueOnce([{ total: "43200.00" }]); // receivables (EUR converted)
-    mockSql.mockResolvedValueOnce([{ total: "0.00" }]);
-    mockSql.mockResolvedValueOnce([{ total: "0.00" }]);
-    mockSql.mockResolvedValueOnce([]);
-    mockSql.mockResolvedValueOnce([{ total: "0.00" }]);
-    mockSql.mockResolvedValueOnce([{ total: "0.00" }]);
-    mockSql.mockResolvedValueOnce([]);
-    mockSql.mockResolvedValueOnce([{ total: "0.00" }]);
+  it("manual entries are split into receivables and payables", async () => {
+    mockInvoiceTotal.mockResolvedValueOnce(0).mockResolvedValueOnce(0);
+    mockOverdueTotal.mockResolvedValueOnce(0).mockResolvedValueOnce(0);
+
+    mockSql
+      .mockResolvedValueOnce([{ total: "0.00" }]) // schedule
+      .mockResolvedValueOnce([]) // rolling
+      .mockResolvedValueOnce([
+        { bank_total: "0.00", salaries_total: "0.00", vat_refund_total: "0.00" },
+      ]) // monthly
+      .mockResolvedValueOnce([{ total: "0.00" }]) // warehouse
+      .mockResolvedValueOnce([]) // import
+      // manual entries: one EUR receivable converted to PLN, one PLN payable
+      .mockResolvedValueOnce([
+        {
+          id: 1,
+          name: "EUR invoice",
+          entry_type: "receivable",
+          gross_value: "1000.00",
+          currency: "EUR",
+          gross_value_pln: "4320.00",
+        },
+        {
+          id: 2,
+          name: "PLN cost",
+          entry_type: "payable",
+          gross_value: "500.00",
+          currency: "PLN",
+          gross_value_pln: "500.00",
+        },
+      ]);
 
     const token = signToken(app);
     const response = await app.inject({
@@ -157,6 +209,9 @@ describe("dashboard summary routes", () => {
 
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.body);
-    expect(body.data.receivables30d).toBe(43200);
+    expect(body.data.manualReceivables).toHaveLength(1);
+    expect(body.data.manualReceivables[0].grossValuePln).toBe(4320);
+    expect(body.data.manualPayables).toHaveLength(1);
+    expect(body.data.manualPayables[0].grossValuePln).toBe(500);
   });
 });

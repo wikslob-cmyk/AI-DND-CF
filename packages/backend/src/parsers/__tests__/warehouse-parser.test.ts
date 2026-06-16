@@ -1,13 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseWarehouseFile } from "../warehouse-parser.js";
 import { ValidationError } from "../types.js";
 
 const ZASOBY_DIR = join(__dirname, "..", "..", "..", "..", "..", "zasoby");
 
+// Integration tests against real company exports in zasoby/ (not committed —
+// sensitive data). Skipped when the directory is absent (e.g. CI / fresh clone).
+const HAS_ZASOBY = existsSync(ZASOBY_DIR);
+
 describe("parseWarehouseFile", () => {
-  it("parses warehouse file into items with quantities and values", () => {
+  it.skipIf(!HAS_ZASOBY)("parses warehouse file into items with quantities and values", () => {
     const buffer = readFileSync(
       join(ZASOBY_DIR, "Zestawienie magazynowe DND 10.04.26.xlsx"),
     );
@@ -28,7 +32,7 @@ describe("parseWarehouseFile", () => {
     }
   });
 
-  it("value per article = quantity_total * unit_price (selling price)", () => {
+  it.skipIf(!HAS_ZASOBY)("value per article = quantity_total * unit_price (selling price)", () => {
     const buffer = readFileSync(
       join(ZASOBY_DIR, "Zestawienie magazynowe DND 10.04.26.xlsx"),
     );
@@ -50,7 +54,7 @@ describe("parseWarehouseFile", () => {
     }
   });
 
-  it("total value is sum of all item values", () => {
+  it.skipIf(!HAS_ZASOBY)("total value is sum of all item values", () => {
     const buffer = readFileSync(
       join(ZASOBY_DIR, "Zestawienie magazynowe DND 10.04.26.xlsx"),
     );
@@ -66,7 +70,7 @@ describe("parseWarehouseFile", () => {
     expect(Math.abs(result.totalValue - computedTotal)).toBeLessThan(1);
   });
 
-  it("extracts EUR rate from the file if present", () => {
+  it.skipIf(!HAS_ZASOBY)("extracts EUR rate from the file if present", () => {
     const buffer = readFileSync(
       join(ZASOBY_DIR, "Zestawienie magazynowe DND 10.04.26.xlsx"),
     );

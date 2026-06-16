@@ -1,17 +1,21 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseSaldeoFile } from "../saldeo-parser.js";
 import { ValidationError } from "../types.js";
 
 const ZASOBY_DIR = join(__dirname, "..", "..", "..", "..", "..", "zasoby");
 
+// Integration tests against real company exports in zasoby/ (not committed —
+// sensitive data). Skipped when the directory is absent (e.g. CI / fresh clone).
+const HAS_ZASOBY = existsSync(ZASOBY_DIR);
+
 function loadSaldeoFile(entity: string): Buffer {
   return readFileSync(join(ZASOBY_DIR, `lista-dokumentow-${entity}.xlsx`));
 }
 
 describe("parseSaldeoFile", () => {
-  it("parses lista-dokumentow-cgesp.xlsx into receivables and payables", () => {
+  it.skipIf(!HAS_ZASOBY)("parses lista-dokumentow-cgesp.xlsx into receivables and payables", () => {
     const buffer = loadSaldeoFile("cgesp");
     const invoices = parseSaldeoFile(buffer, "lista-dokumentow-cgesp.xlsx");
 
@@ -27,7 +31,7 @@ describe("parseSaldeoFile", () => {
     expect(types.has("FZ")).toBe(true);
   });
 
-  it("filters _FS_ and does not match _FS_PF_ or _FS_KOR_", () => {
+  it.skipIf(!HAS_ZASOBY)("filters _FS_ and does not match _FS_PF_ or _FS_KOR_", () => {
     const buffer = loadSaldeoFile("dngro");
     const invoices = parseSaldeoFile(buffer, "lista-dokumentow-dngro.xlsx");
 
@@ -43,7 +47,7 @@ describe("parseSaldeoFile", () => {
     expect(invoices.length).toBeGreaterThan(0);
   });
 
-  it("filters _FZ_ and catches only exact _FZ_", () => {
+  it.skipIf(!HAS_ZASOBY)("filters _FZ_ and catches only exact _FZ_", () => {
     const buffer = loadSaldeoFile("dngro");
     const invoices = parseSaldeoFile(buffer, "lista-dokumentow-dngro.xlsx");
 
@@ -82,7 +86,7 @@ describe("parseSaldeoFile", () => {
     }
   });
 
-  it("excludes invoices with Zapłacono = TAK", () => {
+  it.skipIf(!HAS_ZASOBY)("excludes invoices with Zapłacono = TAK", () => {
     const buffer = loadSaldeoFile("cgesp");
     const invoices = parseSaldeoFile(buffer, "lista-dokumentow-cgesp.xlsx");
 
@@ -117,12 +121,14 @@ describe("parseSaldeoFile", () => {
     const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
     const invoices = parseSaldeoFile(buffer, "lista-dokumentow-cgesp.xlsx");
-    // Should include the invoice even though remaining is 0, because Zapłacono = NIE
+    // Should include the invoice even though "Pozostało do zapłaty" is 0, because
+    // Zapłacono = NIE. A zero in that column on an unpaid invoice means it was not
+    // filled in, so the parser falls back to gross - partial payments (1000 - 0).
     expect(invoices.length).toBe(1);
-    expect(invoices[0]?.remainingAmount).toBe(0);
+    expect(invoices[0]?.remainingAmount).toBe(1000);
   });
 
-  it("normalizes NIP with dashes", () => {
+  it.skipIf(!HAS_ZASOBY)("normalizes NIP with dashes", () => {
     const buffer = loadSaldeoFile("cgesp");
     const invoices = parseSaldeoFile(buffer, "lista-dokumentow-cgesp.xlsx");
 
@@ -136,7 +142,7 @@ describe("parseSaldeoFile", () => {
     }
   });
 
-  it("parses all 5 entity files without errors", () => {
+  it.skipIf(!HAS_ZASOBY)("parses all 5 entity files without errors", () => {
     const entities = ["cgesp", "dngro", "dndsp", "tdmsp", "tdpsp"];
     for (const entity of entities) {
       const buffer = loadSaldeoFile(entity);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseScheduleExcel } from "../schedule-parser-excel.js";
 import { parseSchedulePdf } from "../schedule-parser-pdf.js";
@@ -16,12 +16,16 @@ const ZASOBY_DIR = join(
   "zaobowiazania",
 );
 
+// Integration tests against real company exports in zasoby/ (not committed —
+// sensitive data). Skipped when the directory is absent (e.g. CI / fresh clone).
+const HAS_ZASOBY = existsSync(ZASOBY_DIR);
+
 function loadFile(name: string): Buffer {
   return readFileSync(join(ZASOBY_DIR, name));
 }
 
 describe("parseScheduleExcel", () => {
-  it("parses tabela_rat_364944.xlsx into installments with capital and interest", () => {
+  it.skipIf(!HAS_ZASOBY)("parses tabela_rat_364944.xlsx into installments with capital and interest", () => {
     const buffer = loadFile("tabela_rat_364944.xlsx");
     const result = parseScheduleExcel(buffer, "tabela_rat_364944.xlsx");
 
@@ -42,7 +46,7 @@ describe("parseScheduleExcel", () => {
     }
   });
 
-  it("parses EFL files", () => {
+  it.skipIf(!HAS_ZASOBY)("parses EFL files", () => {
     const buffer = loadFile("harmonogram_splat_EFL_6F01694.xlsx");
     const result = parseScheduleExcel(buffer, "harmonogram_splat_EFL_6F01694.xlsx");
 
@@ -57,7 +61,7 @@ describe("parseScheduleExcel", () => {
     }
   });
 
-  it("parses Santander file with dates", () => {
+  it.skipIf(!HAS_ZASOBY)("parses Santander file with dates", () => {
     const buffer = loadFile("harmonogram_santander_NP6_00258_2023.xlsx");
     const result = parseScheduleExcel(
       buffer,
@@ -72,7 +76,7 @@ describe("parseScheduleExcel", () => {
     }
   });
 
-  it("parses Mercedes Excel file", () => {
+  it.skipIf(!HAS_ZASOBY)("parses Mercedes Excel file", () => {
     const buffer = loadFile("Harmonogram_platnosci-dndgr-mercedes.xlsx");
     const result = parseScheduleExcel(
       buffer,
@@ -87,7 +91,7 @@ describe("parseScheduleExcel", () => {
     }
   });
 
-  it("parses TDM leasing file", () => {
+  it.skipIf(!HAS_ZASOBY)("parses TDM leasing file", () => {
     const buffer = loadFile("TDM-leas.xlsx");
     const result = parseScheduleExcel(buffer, "TDM-leas.xlsx");
 
@@ -114,7 +118,7 @@ describe("parseScheduleExcel", () => {
 });
 
 describe("parseSchedulePdf", () => {
-  it("parses Harmonogram.pdf (Alior) into installments", async () => {
+  it.skipIf(!HAS_ZASOBY)("parses Harmonogram.pdf (Alior) into installments", async () => {
     const buffer = loadFile("Harmonogram.pdf");
     const result = await parseSchedulePdf(buffer, "Harmonogram.pdf");
 
@@ -129,7 +133,7 @@ describe("parseSchedulePdf", () => {
     }
   });
 
-  it("throws ScheduleParseError for LFR.pdf (scan)", async () => {
+  it.skipIf(!HAS_ZASOBY)("throws ScheduleParseError for LFR.pdf (scan)", async () => {
     const buffer = loadFile("LFR.pdf");
 
     await expect(
@@ -141,7 +145,7 @@ describe("parseSchedulePdf", () => {
     ).rejects.toThrow("Skan PDF, wymaga ręcznego wpisu");
   });
 
-  it("parses PKO Leasing PDF", async () => {
+  it.skipIf(!HAS_ZASOBY)("parses PKO Leasing PDF", async () => {
     const buffer = loadFile("Harmonogram spłat_nr umowy 01450_PI_24.pdf");
     const result = await parseSchedulePdf(
       buffer,
@@ -156,7 +160,7 @@ describe("parseSchedulePdf", () => {
     }
   });
 
-  it("sums of installments are reasonable", async () => {
+  it.skipIf(!HAS_ZASOBY)("sums of installments are reasonable", async () => {
     const buffer = loadFile("Harmonogram.pdf");
     const result = await parseSchedulePdf(buffer, "Harmonogram.pdf");
 
