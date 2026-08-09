@@ -64,7 +64,7 @@ const LIABILITIES: LiabilitySeed[] = [
     config: {},
   },
 
-  // dngro - 7 positions
+  // dngro - 6 positions
   {
     entity_code: "dngro",
     name: "Santander - Volvo",
@@ -124,16 +124,6 @@ const LIABILITIES: LiabilitySeed[] = [
     current_balance: 0,
     source_file: null,
     config: { monthly_capital: 0, monthly_interest: 15000, rolling: true },
-  },
-  {
-    entity_code: "dngro",
-    name: "Pożyczka Dawid",
-    type: "loan",
-    status: "active",
-    original_amount: 1000000,
-    current_balance: 1000000,
-    source_file: null,
-    config: {},
   },
 
   // dndsp - 1 position
