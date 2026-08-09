@@ -37,10 +37,6 @@ export const SCHEDULE_FILE_MAP: Record<
     entityCode: "cgesp",
     liabilityName: "Millennium Leasing - młyn + prasa",
   },
-  "Harmonogram.pdf": {
-    entityCode: "cgesp",
-    liabilityName: "Alior Bank",
-  },
   "harmonogram_splat_EFL_6F01694.xlsx": {
     entityCode: "cgesp",
     liabilityName: "EFL - linia produkcyjna",

@@ -12,7 +12,7 @@ interface LiabilitySeed {
 }
 
 const LIABILITIES: LiabilitySeed[] = [
-  // cgesp - 6 positions
+  // cgesp - 5 positions
   {
     entity_code: "cgesp",
     name: "Millennium Leasing - piec",
@@ -31,16 +31,6 @@ const LIABILITIES: LiabilitySeed[] = [
     original_amount: 0,
     current_balance: 0,
     source_file: "tabela_rat_364944.xlsx",
-    config: {},
-  },
-  {
-    entity_code: "cgesp",
-    name: "Alior Bank",
-    type: "credit",
-    status: "active",
-    original_amount: 0,
-    current_balance: 0,
-    source_file: "Harmonogram.pdf",
     config: {},
   },
   {
@@ -74,7 +64,7 @@ const LIABILITIES: LiabilitySeed[] = [
     config: {},
   },
 
-  // dngro - 6 positions
+  // dngro - 7 positions
   {
     entity_code: "dngro",
     name: "Santander - Volvo",
@@ -134,6 +124,16 @@ const LIABILITIES: LiabilitySeed[] = [
     current_balance: 0,
     source_file: null,
     config: { monthly_capital: 0, monthly_interest: 15000, rolling: true },
+  },
+  {
+    entity_code: "dngro",
+    name: "Pożyczka Dawid",
+    type: "loan",
+    status: "active",
+    original_amount: 1000000,
+    current_balance: 1000000,
+    source_file: null,
+    config: {},
   },
 
   // dndsp - 1 position
